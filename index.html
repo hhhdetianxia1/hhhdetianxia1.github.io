@@ -1,0 +1,2566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本真消费日记 - 理性消费哲学实验</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        body {
+            scroll-behavior: smooth;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        .type-selected {
+            background-color: #3b82f6 !important;
+            color: white !important;
+        }
+        .emotion-selected {
+            border: 2px solid #10b981 !important;
+            background-color: rgba(16, 185, 129, 0.1) !important;
+        }
+        .answer-selected {
+            border: 2px solid #8b5cf6 !important;
+            background-color: rgba(139, 92, 246, 0.1) !important;
+        }
+        .line-clamp-2 {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+        .editable-income {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .editable-income:hover {
+            background-color: #f3f4f6;
+        }
+        .income-input {
+            width: 80px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 2px 4px;
+            text-align: center;
+        }
+        .test-option {
+            transition: all 0.2s;
+        }
+        .test-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .quote-animation {
+            animation: fadeIn 1s ease-out;
+        }
+        .warning-badge {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 md:p-8">
+    <!-- 顶部状态栏 -->
+    <div class="w-full max-w-6xl mb-6 flex justify-between items-center">
+        <div class="text-sm text-gray-600">本真消费实验室</div>
+        <div class="flex items-center gap-4">
+            <div class="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg shadow-sm flex items-center gap-2">
+                <iconify-icon icon="mdi:wallet"></iconify-icon>
+                <span>余额: <span id="walletBalance">3000</span> <span id="walletCurrency">EC</span></span>
+            </div>
+            <div class="px-4 py-2 bg-gray-50 text-gray-700 rounded-lg shadow-sm text-sm editable-income" id="monthlyIncomeContainer">
+                本月薪金: <span id="monthlyIncome">5000</span> EC
+            </div>
+            <!-- 新增：重置数据按钮 -->
+            <button id="resetDataBtn" class="px-4 py-2 bg-red-50 text-red-700 rounded-lg shadow-sm text-sm hover:bg-red-100 transition flex items-center gap-2">
+                <iconify-icon icon="mdi:refresh"></iconify-icon>
+                <span>重置数据</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 导航控制器 -->
+    <nav class="flex justify-center mb-8 gap-4 sticky top-2 z-50">
+        <div class="bg-white rounded-full shadow-lg flex flex-wrap justify-center p-1">
+            <a href="#home" class="px-4 py-2 rounded-full hover:bg-gray-100 transition-colors text-sm md:text-base">首页</a>
+            <a href="#pre-record" class="px-4 py-2 rounded-full hover:bg-gray-100 transition-colors text-sm md:text-base">消费前</a>
+            <a href="#post-record" class="px-4 py-2 rounded-full hover:bg-gray-100 transition-colors text-sm md:text-base">消费后</a>
+            <a href="#report" class="px-4 py-2 rounded-full hover:bg-gray-100 transition-colors text-sm md:text-base">数据报告</a>
+            <a href="#square" class="px-4 py-2 rounded-full hover:bg-gray-100 transition-colors text-sm md:text-base">反思广场</a>
+            <a href="#test" class="px-4 py-2 rounded-full hover:bg-gray-100 transition-colors text-sm md:text-base">人格测试</a>
+        </div>
+    </nav>
+
+    <div class="flex flex-col gap-10 max-w-6xl w-full">
+        <!-- 首页/概念引导页 -->
+        <section id="home" class="w-full bg-white rounded-2xl shadow-lg overflow-hidden fade-in">
+            <div class="flex flex-col lg:flex-row">
+                <div class="w-full lg:w-2/5 p-6 md:p-10 bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col justify-center">
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">本真消费日记</h1>
+                    <p class="text-base md:text-lg text-gray-600 mb-8">连接物质与精神，记录每一次消费背后的哲学思考</p>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-100">
+                            <iconify-icon icon="mdi:lightbulb-on" class="text-2xl text-amber-500"></iconify-icon>
+                            <div>
+                                <h3 class="font-medium text-gray-800">哲学概念</h3>
+                                <p class="text-sm text-gray-500">探索消费与存在的关系</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-100">
+                            <iconify-icon icon="mdi:account-circle" class="text-2xl text-blue-500"></iconify-icon>
+                            <div>
+                                <h3 class="font-medium text-gray-800">欲望管理</h3>
+                                <p class="text-sm text-gray-500">量化与平衡需求与欲望</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-100">
+                            <iconify-icon icon="mdi:chart-areaspline" class="text-2xl text-green-500"></iconify-icon>
+                            <div>
+                                <h3 class="font-medium text-gray-800">消费分析</h3>
+                                <p class="text-sm text-gray-500">可视化理解消费模式</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-100">
+                            <iconify-icon icon="mdi:forum" class="text-2xl text-purple-500"></iconify-icon>
+                            <div>
+                                <h3 class="font-medium text-gray-800">反思社区</h3>
+                                <p class="text-sm text-gray-500">与他人分享消费洞见</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-3/5 p-6 md:p-10 flex flex-col justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                    <div class="space-y-8">
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-semibold text-gray-800 mb-3">今日哲思</h2>
+                            <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm quote-animation" id="dailyQuote">
+                                <!-- 名言将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-semibold text-gray-800 mb-3">消费人格</h2>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white p-4 rounded-xl shadow-sm flex items-center gap-3">
+                                    <iconify-icon icon="mdi:leaf" class="text-2xl text-emerald-500"></iconify-icon>
+                                    <div>
+                                        <h3 class="font-medium text-gray-800">简约思考者</h3>
+                                        <p class="text-sm text-gray-500">寻求本质价值</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white p-4 rounded-xl shadow-sm flex items-center gap-3">
+                                    <iconify-icon icon="mdi:chart-line" class="text-2xl text-blue-500"></iconify-icon>
+                                    <div>
+                                        <h3 class="font-medium text-gray-800">理性决策者</h3>
+                                        <p class="text-sm text-gray-500">基于数据判断</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 消费前记录页 -->
+        <section id="pre-record" class="w-full bg-white rounded-2xl shadow-lg p-6 md:p-10 fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-2 md:mb-0">消费前思考</h2>
+                <div class="text-gray-500 text-sm md:text-base">今日</div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                <div class="bg-gray-50 rounded-xl p-4 md:p-6 lg:col-span-2">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">消费需求评估</h3>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">物品名称</label>
+                            <input type="text" id="itemName" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition" placeholder="例如：有机咖啡豆、哲学书籍..." value="有机咖啡豆">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">预估金额 (EC)</label>
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-500">¥</span>
+                                <input type="number" id="itemPrice" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition" placeholder="128" value="128">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">消费类型</label>
+                            <div class="flex flex-wrap gap-2" id="consumptionType">
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm cursor-pointer hover:bg-blue-200 transition type-selected" data-value="必需品">必需品</span>
+                                <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm cursor-pointer hover:bg-purple-200 transition" data-value="文化体验">文化体验</span>
+                                <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm cursor-pointer hover:bg-amber-200 transition" data-value="社交需求">社交需求</span>
+                                <span class="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-sm cursor-pointer hover:bg-rose-200 transition" data-value="冲动消费">冲动消费</span>
+                                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm cursor-pointer hover:bg-emerald-200 transition" data-value="自我投资">自我投资</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">消费动机描述</label>
+                            <textarea id="consumptionMotivation" class="w-full h-32 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition" placeholder="我为什么想要购买这个物品？它满足的是我的真实需求，还是外界塑造的欲望？...">每天都需要咖啡来开始工作，但这次想尝试更高品质的有机咖啡豆。</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 md:p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">欲望强度分析</h3>
+
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm text-gray-600">真实需求</span>
+                                <span class="text-sm text-gray-600"><span id="realNeedValue">65</span>%</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-emerald-500 rounded-full" id="realNeedBar" style="width: 65%"></div>
+                            </div>
+                            <input type="range" min="0" max="100" value="65" class="w-full mt-2" id="realNeedSlider">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm text-gray-600">情绪驱动</span>
+                                <span class="text-sm text-gray-600"><span id="emotionValue">30</span>%</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-amber-500 rounded-full" id="emotionBar" style="width: 30%"></div>
+                            </div>
+                            <input type="range" min="0" max="100" value="30" class="w-full mt-2" id="emotionSlider">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm text-gray-600">环境影响</span>
+                                <span class="text-sm text-gray-600"><span id="socialValue">45</span>%</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-purple-500 rounded-full" id="socialBar" style="width: 45%"></div>
+                            </div>
+                            <input type="range" min="0" max="100" value="45" class="w-full mt-2" id="socialSlider">
+                        </div>
+
+                        <div class="mt-8">
+                            <div class="text-center mb-3">
+                                <h4 class="font-medium text-gray-700 mb-1">欲望指数</h4>
+                                <div class="text-3xl font-bold text-blue-600" id="desireIndex">47</div>
+                                <span class="text-sm text-gray-500">中等偏理性</span>
+                            </div>
+                            <button id="recordPreConsumption" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition shadow-md hover:shadow-lg">确认记录本次消费</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 消费后记录页 -->
+        <section id="post-record" class="w-full bg-white rounded-2xl shadow-lg p-6 md:p-10 fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-2 md:mb-0">消费后记录</h2>
+                <div class="text-gray-500 text-sm md:text-base">今日</div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                <div class="lg:col-span-1 bg-gray-50 rounded-xl p-4 md:p-6 flex flex-col items-center">
+                    <div class="w-32 h-32 md:w-40 md:h-40 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
+                        <iconify-icon icon="mdi:coffee" class="text-4xl text-gray-400"></iconify-icon>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-semibold text-gray-800 mb-2" id="postItemName">有机咖啡豆</h3>
+                    <div class="text-blue-600 font-medium text-lg mb-4" id="postItemPrice">¥128.00</div>
+
+                    <div class="w-full">
+                        <div class="flex justify-between mb-2 text-sm">
+                            <span class="text-gray-600">购买时间</span>
+                            <span id="purchaseTime">刚刚</span>
+                        </div>
+                        <div class="flex justify-between mb-2 text-sm">
+                            <span class="text-gray-600">消费类型</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-sm" id="postItemType">必需品</span>
+                        </div>
+                        <div class="flex justify-between mb-2 text-sm">
+                            <span class="text-gray-600">欲望指数</span>
+                            <span id="postDesireIndex">47</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-4 md:p-6">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">消费后情绪评估</h3>
+
+                        <div class="grid grid-cols-2 gap-4" id="emotionOptions">
+                            <div class="emotion-option bg-white/80 backdrop-blur-sm p-4 rounded-xl flex items-center gap-3 cursor-pointer hover:shadow-md transition emotion-selected" data-emotion="满意愉悦">
+                                <iconify-icon icon="mdi:emoticon-happy" class="text-3xl text-green-500"></iconify-icon>
+                                <span class="font-medium">满意愉悦</span>
+                            </div>
+
+                            <div class="emotion-option bg-white/80 backdrop-blur-sm p-4 rounded-xl flex items-center gap-3 cursor-pointer hover:shadow-md transition" data-emotion="平静无感">
+                                <iconify-icon icon="mdi:emoticon-neutral" class="text-3xl text-gray-500"></iconify-icon>
+                                <span class="font-medium">平静无感</span>
+                            </div>
+
+                            <div class="emotion-option bg-white/80 backdrop-blur-sm p-4 rounded-xl flex items-center gap-3 cursor-pointer hover:shadow-md transition" data-emotion="略微后悔">
+                                <iconify-icon icon="mdi:emoticon-sad" class="text-3xl text-blue-500"></iconify-icon>
+                                <span class="font-medium">略微后悔</span>
+                            </div>
+
+                            <div class="emotion-option bg-white/80 backdrop-blur-sm p-4 rounded-xl flex items-center gap-3 cursor-pointer hover:shadow-md transition" data-emotion="强烈后悔">
+                                <iconify-icon icon="mdi:emoticon-angry" class="text-3xl text-red-500"></iconify-icon>
+                                <span class="font-medium">强烈后悔</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">消费感悟</h3>
+                        <textarea id="consumptionReflection" class="w-full h-32 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-300 focus:border-green-400 outline-none transition" placeholder="记录本次消费的收获、反思或感悟...例如：这次消费让我意识到，我真正需要的不是咖啡本身，而是工作间隙的喘息时刻...">质量不错，香气浓郁，但可能不需要这么贵的品牌。下次可以尝试性价比更高的选项。</textarea>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 md:p-6">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">价值评分</h3>
+                        <div class="flex flex-col md:flex-row gap-6 md:gap-8">
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-gray-600">实用价值</span>
+                                    <span class="text-sm text-gray-600"><span id="practicalValueText">8</span>/10</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full bg-orange-500 rounded-full" id="practicalValueBar" style="width: 80%"></div>
+                                </div>
+                                <input type="range" min="1" max="10" value="8" class="w-full mt-2" id="practicalValueSlider">
+                            </div>
+
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-gray-600">情感价值</span>
+                                    <span class="text-sm text-gray-600"><span id="emotionalValueText">9</span>/10</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full bg-amber-500 rounded-full" id="emotionalValueBar" style="width: 90%"></div>
+                                </div>
+                                <input type="range" min="1" max="10" value="9" class="w-full mt-2" id="emotionalValueSlider">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="savePostRecord" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-medium transition shadow-md hover:shadow-lg">保存消费后记录</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 个人数据报告页 -->
+        <section id="report" class="w-full bg-white rounded-2xl shadow-lg p-6 md:p-10 fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-2 md:mb-0">个人消费报告</h2>
+                <div class="text-gray-500 text-sm md:text-base">本月报告</div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 md:p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">消费类型分布</h3>
+                    <div id="chart1" class="h-64"></div>
+                </div>
+
+                <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 md:p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">月度消费趋势</h3>
+                    <div id="chart2" class="h-64"></div>
+                </div>
+
+                <div class="lg:col-span-2 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl p-4 md:p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">消费价值分析</h3>
+                    <div id="chart3" class="h-80"></div>
+                </div>
+            </div>
+            
+            <!-- 新增：未来消费规划与警示 -->
+            <div class="mt-8 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 md:p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg md:text-xl font-semibold text-gray-800 flex items-center gap-2">
+                        <iconify-icon icon="mdi:lightbulb-alert" class="text-2xl text-amber-600"></iconify-icon>
+                        <span>未来消费规划与警示</span>
+                    </h3>
+                    <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium warning-badge" id="warningLevel">中等提醒</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm">
+                        <h4 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                            <iconify-icon icon="mdi:calendar-clock" class="text-blue-500"></iconify-icon>
+                            <span>月度预算状态</span>
+                        </h4>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="flex-1">
+                                <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                    <span>已消费</span>
+                                    <span id="spentAmount">0 EC</span>
+                                </div>
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full bg-blue-500 rounded-full" id="budgetProgressBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600" id="budgetStatusText">本月预算充足</p>
+                    </div>
+                    
+                    <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm">
+                        <h4 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                            <iconify-icon icon="mdi:alert-circle" class="text-rose-500"></iconify-icon>
+                            <span>潜在风险警示</span>
+                        </h4>
+                        <ul class="space-y-2 text-sm text-gray-600" id="riskWarnings">
+                            <li class="flex items-start gap-2">
+                                <iconify-icon icon="mdi:check-circle" class="text-green-500 mt-0.5"></iconify-icon>
+                                <span>暂无检测到高风险消费模式</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm">
+                        <h4 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                            <iconify-icon icon="mdi:target" class="text-emerald-500"></iconify-icon>
+                            <span>优化建议</span>
+                        </h4>
+                        <ul class="space-y-2 text-sm text-gray-600" id="optimizationSuggestions">
+                            <li class="flex items-start gap-2">
+                                <iconify-icon icon="mdi:lightbulb" class="text-amber-500 mt-0.5"></iconify-icon>
+                                <span>继续记录消费，获取个性化建议</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-4 rounded-xl">
+                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <iconify-icon icon="mdi:finance" class="text-purple-500"></iconify-icon>
+                        <span>智能消费规划</span>
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-2">根据您的消费模式，建议下月分配：</p>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-700">必需品预算</span>
+                                    <span class="font-medium" id="essentialBudget">0 EC</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-700">文化体验预算</span>
+                                    <span class="font-medium" id="cultureBudget">0 EC</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-700">自我投资预算</span>
+                                    <span class="font-medium" id="investmentBudget">0 EC</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <button id="applyBudgetPlan" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition">应用此预算方案</button>
+                            <p class="text-xs text-gray-500 mt-2 text-center">点击应用将调整您的月度预算分配</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 md:p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">哲学反思报告</h3>
+                <div class="space-y-4">
+                    <div class="bg-white p-4 rounded-xl">
+                        <h4 class="font-medium text-gray-800 mb-2">"精致穷"风险评估</h4>
+                        <p class="text-gray-600 text-sm" id="luxuryRiskText">根据您的消费记录，目前尚未检测到明显的"精致穷"消费模式。您的消费以实用价值和情感价值的平衡为主。</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl">
+                        <h4 class="font-medium text-gray-800 mb-2">消费模式洞察</h4>
+                        <p class="text-gray-600 text-sm" id="consumptionPatternText">您倾向于在文化体验和自我投资上花费较多，这体现了对精神生活的重视。建议保持对情绪驱动消费的觉察。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 反思广场页 -->
+        <section id="square" class="w-full bg-white rounded-2xl shadow-lg p-6 md:p-10 fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-0">反思广场</h2>
+                <button id="publishReflection" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg flex items-center gap-2 text-sm md:text-base">
+                    <iconify-icon icon="mdi:plus"></iconify-icon>
+                    <span>发表反思</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="reflectionPostsContainer">
+                <!-- 帖子将通过JavaScript动态生成 -->
+            </div>
+
+            <div class="mt-8 md:mt-10">
+                <h3 class="text-lg md:text-xl font-semibold text-gray-800 mb-6">反思排行榜</h3>
+                <div class="bg-gray-50 rounded-xl p-4 md:p-5" id="reflectionRanking">
+                    <!-- 排行榜将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 消费人格测试页 -->
+        <section id="test" class="w-full bg-white rounded-2xl shadow-lg p-6 md:p-10 fade-in">
+            <div class="text-center mb-8 md:mb-10">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-2">消费人格测试</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto text-sm md:text-base">通过36道问题揭示你的消费心理模式，帮助理解消费决策背后的哲学思考</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl p-6 md:p-8">
+                <div class="text-center mb-8">
+                    <h3 class="text-lg md:text-xl font-semibold text-gray-800 mb-4" id="questionTitle">问题 1/36</h3>
+                    <p class="text-base md:text-lg text-gray-700" id="questionText">当朋友用三个词来形容你时，你认为以下哪个选项出现的可能性最高？</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto" id="testOptions">
+                    <!-- 选项将通过JavaScript动态生成 -->
+                </div>
+
+                <div class="flex justify-between items-center mt-8 md:mt-10">
+                    <button id="prevQuestion" class="px-4 md:px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition hidden">上一题</button>
+                    <button id="nextQuestion" class="px-6 md:px-8 py-2 md:py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition">下一题</button>
+                </div>
+
+                <div class="mt-6">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-purple-600 h-2 rounded-full" id="progressBar" style="width: 2.78%"></div>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-600 mt-1">
+                        <span id="progressText">1/36</span>
+                        <span id="progressPercent">3%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 md:p-8 hidden" id="testResult">
+                <h3 class="text-lg md:text-xl font-semibold text-gray-800 mb-4">你的消费人格</h3>
+                <div class="text-center">
+                    <div class="text-2xl md:text-3xl font-bold text-emerald-600 mb-2" id="personalityType">MIM-极简隐士</div>
+                    <p class="text-gray-600 mb-4 text-lg" id="personalityDescription"></p>
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm mt-4 text-left">
+                        <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                            <iconify-icon icon="mdi:account-details" class="text-blue-500"></iconify-icon>
+                            <span>人格详解</span>
+                        </h4>
+                        <p id="personalityDetail" class="text-gray-700"></p>
+                    </div>
+                    <button id="retakeTest" class="mt-6 px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium">重新测试</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="mt-8 md:mt-12 text-center text-gray-600 text-xs md:text-sm max-w-2xl">
+        <p class="mb-2">© 2025 本真消费日记 | 探索物质与精神的平衡之道</p>
+        <p class="flex flex-col md:flex-row justify-center gap-2 md:gap-4">
+            <span>版本 1.3.0</span>
+            <span>网站地址: authentic-consumption-diary.netlify.app</span>
+            <span>隐私政策</span>
+            <span>使用条款</span>
+        </p>
+    </footer>
+
+    <script>
+        // ==================== 新增：哲学名言库 ====================
+        const PhilosophicalQuotes = [
+            {
+                quote: "我们消费的从来不是物品，而是通过物品消费的'关系'。",
+                author: "让·鲍德里亚《消费社会》",
+                color: "text-blue-600"
+            },
+            {
+                quote: "真正的奢侈不是购买更多，而是拥有更少却更好。",
+                author: "约书亚·贝克尔《极简主义》",
+                color: "text-emerald-600"
+            },
+            {
+                quote: "消费是欲望的语言，节制是自由的语法。",
+                author: "亚里士多德",
+                color: "text-purple-600"
+            },
+            {
+                quote: "当你知道自己真正需要什么时，你就不再是广告的奴隶。",
+                author: "维托尔德·贡布罗维奇",
+                color: "text-amber-600"
+            },
+            {
+                quote: "最昂贵的奢侈品，是无需向任何人证明的自由。",
+                author: "马塞尔·普鲁斯特",
+                color: "text-rose-600"
+            },
+            {
+                quote: "消费不是为了占有，而是为了存在。",
+                author: "马丁·海德格尔",
+                color: "text-indigo-600"
+            },
+            {
+                quote: "俭以养德，奢以败行。古训至今，尤需警惕。",
+                author: "诸葛亮《诫子书》",
+                color: "text-gray-600"
+            },
+            {
+                quote: "物质带来的满足感是暂时的，精神丰盈的快乐是永恒的。",
+                author: "伊壁鸠鲁",
+                color: "text-teal-600"
+            },
+            {
+                quote: "拥有越多，被拥有得越多。",
+                author: "老子《道德经》",
+                color: "text-green-600"
+            },
+            {
+                quote: "消费主义最大的谎言：你购买的东西能定义你是谁。",
+                author: "齐格蒙特·鲍曼",
+                color: "text-red-600"
+            },
+            {
+                quote: "真正的富有，是有能力拒绝不需要的东西。",
+                author: "塞涅卡",
+                color: "text-orange-600"
+            },
+            {
+                quote: "消费不是目的，而是通往更充实生活的手段。",
+                author: "彼得·德鲁克",
+                color: "text-cyan-600"
+            }
+        ];
+
+        // ==================== 全局状态管理 ====================
+        const AppState = {
+            wallet: {
+                balance: 3000,
+                monthlyIncome: 5000,
+                currency: 'EC',
+                budget: {
+                    essentials: 2000,
+                    culture: 800,
+                    investment: 1200,
+                    social: 500,
+                    impulse: 500
+                }
+            },
+            consumptionRecords: [],
+            reflectionPosts: [
+                {
+                    id: 1,
+                    author: '林清玄',
+                    time: '2小时前',
+                    title: '购买电子书后的思考',
+                    content: '在购买《瓦尔登湖》电子书前，我问自己：这是对精神的滋养还是无意识的知识消费？最终我选择了购买，因为它符合我本月"文化投资"的预算，且阅读带来的宁静远超消费金额。',
+                    likes: 23,
+                    comments: 7,
+                    avatarColor: 'bg-blue-100'
+                },
+                {
+                    id: 2,
+                    author: '王明远',
+                    time: '昨天',
+                    title: '月度消费反思总结',
+                    content: '这个月通过消费日记发现自己情感消费明显减少。一次想买新款耳机的冲动，在记录"消费前思考"时被化解——我意识到现有的耳机音质完全够用，那只是对"新潮"符号的追逐。',
+                    likes: 45,
+                    comments: 12,
+                    avatarColor: 'bg-green-100'
+                },
+                {
+                    id: 3,
+                    author: '陈心怡',
+                    time: '3天前',
+                    title: '拒绝购物节后的变化',
+                    content: '这个双十一我选择不参与，虽然一开始看到促销有些不习惯，但发现生活反而更轻松了。省下的钱和精力，让我参加了一次一直想去的陶艺工作坊，这才是真正的"消费升级"。',
+                    likes: 68,
+                    comments: 21,
+                    avatarColor: 'bg-purple-100'
+                }
+            ],
+            personalityTest: {
+                currentQuestion: 1,
+                totalQuestions: 36,
+                answers: {},
+                questions: [
+                    "当朋友用三个词来形容你时，你认为以下哪个选项出现的可能性最高？",
+                    "在空闲时间里，你更倾向于如何度过？",
+                    "当你感到压力或情绪低落时，什么方式最能让你快速感到安慰？",
+                    "你如何看待'生活需要仪式感'这个说法？",
+                    "当你收到一笔额外的收入（如奖金、兼职报酬或红包），你第一时间会想用它来做什么？",
+                    "你如何形容你和'潮流'之间的关系？",
+                    "在什么情况下，你会觉得'钱花得特别值'？",
+                    "当你精心打扮或使用了某件有品质的物品后，你走在街上或见到朋友时，心态上会有变化吗？",
+                    "对于你拥有的那些有点'小贵'但能带来愉悦感的物品（如香薰、高品质耳机、设计师物件），你平时是如何对待和使用的？",
+                    "当一件你非常喜欢的'精致好物'（如限量版球鞋、新款手机、名牌衣服）超出当月预算时，你最可能怎么做？",
+                    "你会在社交媒体（如小红书、抖音）上看到别人分享的'精致生活'后，产生羡慕并想去购买同款或体验同款吗？",
+                    "朋友邀请你去一家很贵的网红餐厅打卡，你首先会考虑什么？",
+                    "您在社交媒体（如小红书、微博、朋友圈等）上分享的消费内容（如美食、旅行、新购入物品），通常更侧重于：",
+                    "在享受了'精致'消费后，您的财务状况更符合以下哪种？",
+                    "回顾您为'精致'付出的消费，有多少事后会让您感到后悔或觉得不值？",
+                    "如果未来几个月您都需要严格控制开支，不能再进行任何'非必要'的消费，您觉得您会？",
+                    "看到朋友晒出他/她新买的、您也很心动但买不起的贵重物品时，您内心的主要想法是？",
+                    "在您决定购买一件能显著提升您生活'精致感'的物品时，以下因素哪个是您最看重的？",
+                    "您认为您'精致'消费的动力来源是？",
+                    "您是否同意以下说法：'消费，是我对抗日常生活（如工作枯燥、压力巨大）中最直接、最有效的解压阀和补偿剂。'",
+                    "您认为，您所追求的'精致'标准，最主要来源于？",
+                    "当您暂时无法拥有某件心仪的'精致'物品时，您最常有的感受是？",
+                    "在购买商品（如服饰、电子产品、化妆品等）时，您在多大程度上看重其品牌所代表的'形象'或'身份'？",
+                    "您是否曾为了购买某个能彰显'品味'或'生活方式'的商品（如高端咖啡、设计师联名款、网红餐厅打卡、限量版产品等）而超出当月的预算？",
+                    "您是否认同以下说法：'使用某些特定品牌的产品，能让我感觉更融入某个社交圈子或群体'？",
+                    "您认为您所拥有的物品，在多大程度上代表了'您是谁'？",
+                    "在拥有或使用那些代表'精致生活'的物品后，您对以下哪个选项最为认同？",
+                    "在追求'精致'生活的过程中，您是否曾感到过一种矛盾或撕裂感，即'展示出的自我'与'真实的自我'之间存在距离？",
+                    "在您进行'精致'消费的过程中，是否曾产生过一种'被操控感'或'不真实感'？",
+                    "关于'精致消费'与财务状况的关系，您是否有过以下感受或思考？",
+                    "为了维持或追求您所期待的'精致'消费，您考虑过以下哪些选择？",
+                    "为了获得或维持一次'精致'消费（如一次奢侈旅行、一个名牌包），您是否曾主动或被动地削减过以下您认为本应更重要的支出？",
+                    "请想象一个完全不依赖物质消费的'理想生活'状态，您认为其核心特质是？",
+                    "您更认同以下哪种说法？",
+                    "当您进行一次'精致'的消费后，您最主要的感受是？（可多选）",
+                    "请评估您更同意以下哪种说法："
+                ],
+                options: [
+                    ["A. 务实、理性、沉稳", "B. 精致、时髦、有品味", "C. 随性、自由、不拘小节", "D. 热情、大方、乐于分享"],
+                    ["A. 宅家休息，追剧、打游戏或看书", "B. 研究穿搭、美妆或家居布置", "C. 外出探索，打卡新开的店铺或展览", "D. 运动健身或参与户外活动"],
+                    ["A. 独处和自我调整", "B. 购物消费，给自己买点喜欢的东西", "C. 与朋友或家人倾诉交流", "D. 通过美食或一场旅行来放松"],
+                    ["A. 非常认同，这是对生活的热爱和尊重", "B. 比较认同，但觉得要量力而行", "C. 不太在意，觉得形式不重要", "D. 不认同，认为这是不必要的折腾"],
+                    ["A. 立刻去买那件惦记已久、能提升生活品质的'大件'或体验", "B. 存起来大部分，只拿出一小部分奖励自己", "C. 用于投资自己，比如报个课程、买书学习或健身", "D. 没有特别计划，先存着，等有明确需要时再用"],
+                    ["A. 我是潮流的追随者，关注并乐意尝试新的流行事物", "B. 我只选择适合自己的潮流元素，不盲目跟风", "C. 我对潮流不太敏感，更坚持自己一贯的风格", "D. 我基本不关心潮流，完全按自己的喜好来"],
+                    ["A. 买的东西得到了很多人的认可和赞美", "B. 物品或体验极大地提升了我的日常幸福感", "C. 这笔消费帮我节省了时间或解决了大问题", "D. 感觉这笔钱是对我未来的一种投资"],
+                    ["A. 会更有自信，感觉别人看自己的眼光都不一样了", "B. 心情会变好，但主要是取悦自己，不太在意别人怎么看", "C. 会不自觉地关注别人是否注意到了我的变化", "D. 和平时没什么两样，外在装扮不影响我的心态"],
+                    ["A. 经常使用，并非常爱惜，感觉它们让日常生活充满了仪式感", "B. 重要场合或心情好时才用，让使用它们变成一种特别的体验", "C. 刚买时很新鲜，后来就慢慢闲置了，但拥有它们就觉得很满足", "D. 和普通物品一样使用，不会给予特殊关注"],
+                    ["A. 果断入手，钱可以再赚，热爱和心情无法等待", "B. 使用信用卡分期或花呗，减轻当下压力", "C. 放入购物车，等有优惠或下个月再买", "D. 冷静后觉得非必需品，直接放弃"],
+                    ["A. 经常这样，它是我的主要'种草'来源", "B. 偶尔会，但会理性判断自己是否需要", "C. 很少，我更相信自己的真实需求", "D. 完全不会，对此无感"],
+                    ["A. 拍照好不好看，能不能发朋友圈，氛围感如何", "B. 人均价格是多少，这个月是否还能承担", "C. 食物是否真的好吃，值得这个价钱", "D. 直接坦诚地告诉朋友，最近预算紧张，能否换一家"],
+                    ["A. 纯粹记录个人生活", "B. 物品的实用性和性价比", "C. 物品的美学设计、品牌故事或其所代表的生活方式", "D. 希望获得他人的关注和认同"],
+                    ["A. 表面光鲜，但银行卡、支付宝、微信钱包三大余额相加常常不足四位数", "B. 是'月光族'，但基本能自给自足，没有负债", "C. 略有负债（如信用卡、花呗分期），但尚在可控范围内", "D. 有稳定的储蓄习惯，消费后仍有结余"],
+                    ["A. 经常后悔，很多东西买回来就闲置了", "B. 偶尔有几件，但总体觉得提升了生活幸福感", "C. 很少后悔，因为我都是经过深思熟虑才买的", "D. 几乎不，我的消费都非常理性克制"],
+                    ["A. 感到非常不适和压抑，生活仿佛失去了很多色彩", "B. 可以接受，正好趁此机会存点钱", "C. 有点难过，但会寻找其他不花钱的乐趣来替代", "D. 完全没问题，这不会对我的生活质量造成影响"],
+                    ["A. 羡慕，并感到有点焦虑，觉得自己落后了", "B. 欣赏，然后默默激励自己要更努力赚钱", "C. 无感，每个人的消费选择和财务状况不同", "D. 怀疑，觉得他/她可能也在'精致穷'"],
+                    ["A. 产品的实际功能与质量", "B. 品牌所代表的社会地位与身份认同", "C. 在社交媒体上展示并获得认可", "D. 购买和拥有时带来的即时愉悦感"],
+                    ["A. 广告与社交媒体塑造的'美好生活'模板", "B. 身边朋友、同事或所在圈子的消费水准与习惯", "C. 对自我价值的内在追求与定义", "D. 作为一种对现实压力（如工作辛苦）的补偿和犒劳"],
+                    ["A. 非常同意，这是我消费的重要动力之一。", "B. 比较同意，有时会这样。", "C. 中立/不确定。", "D. 不太同意，我的消费和情绪补偿关系不大。", "E. 完全不同意，我有其他更健康的解压方式。"],
+                    ["A. 一个模糊的'他者'：是社交媒体、影视作品等营造的一种无处不在的、精致的整体氛围。", "B. 具体的'身边人'：来自朋友、同事或我日常接触的特定群体的直接影响。", "C. 商业资本的塑造：是广告和营销精心为我定义好的'理想生活'模板。", "D. 内在的自我探索：源于我个人对美和品质的真实理解与追求，与外界的评判关系不大。"],
+                    ["A. 缺失感：感觉自己的生活因此不够完整，离'理想状态'差了一口气。", "B. 焦虑感：担心自己因此落后于潮流或所在的社交圈。", "C. 平静感：清楚地知道'我没有那个，我也很好'，物品与自我价值无关。", "D. 动力感：将其转化为努力赚钱的目标，认为'等我拥有了它，我就更好了'。"],
+                    ["A. 非常不看重", "B. 不太看重", "C. 一般", "D. 比较看重", "E. 非常看重"],
+                    ["A. 从未", "B. 偶尔", "C. 有时", "D. 经常", "E. 总是"],
+                    ["A. 非常不认同", "B. 不太认同", "C. 不确定", "D. 比较认同", "E. 非常认同"],
+                    ["A. 很大程度上，我的物品定义了我的品味和个性", "B. 一定程度上，它们是我的一部分，但并非全部", "C. 很小程度上，我远比我拥有的东西复杂得多", "D. 完全不能，我的价值由内在决定，与物品无关"],
+                    ["A. 它让我感觉更接近自己想成为的人。", "B. 我需要持续向他人展示它，以确认'我'的价值", "C. 没有这些物品时，我会感到某种程度的身份焦虑。", "D. 我享受的是物品本身，而非它带来的他人目光。"],
+                    ["A. 从未感到", "B. 偶尔感到", "C. 有时感到", "D. 经常感到", "E. 一直感到，且困扰着我"],
+                    ["A. 经常有：我清楚感觉到自己的欲望是被外界植入的，并非本心所需。", "B. 偶尔有：在消费后的一瞬间，会怀疑'这真的是我想要的吗？'", "C. 很少有：大多数时候，我认为我的选择是自主的。", "D. 从未有过：我的所有消费都完全发自内心，充满确定感。"],
+                    ["A. 我为自己'花钱买体验'的行为辩护，认为这比单纯存钱更有价值。", "B. 我会因为消费超出预算而感到焦虑或内疚。", "C. 我担心这种消费习惯会影响我未来的重大人生规划（如买房、结婚、生育）。", "D. 我在'及时行乐'和'为未来负责'之间感到强烈矛盾。"],
+                    ["A. 动用为未来储备的储蓄", "B. 申请分期付款或使用信用消费工具", "C. 削减在基础生活（如饮食、健康）上的开支", "D. 向家人隐瞒消费的真实价格或借贷"],
+                    ["A. 是，削减了'个人发展'开支：如用于学习、培训、技能提升的预算。", "B. 是，削减了'身心健康'开支：如体检、购买更健康食品、健身课程的费用。", "C. 是，削减了'情感连接'开支：如与家人朋友深度社交、维系关系的预算。", "D. 否，我从未因此牺牲过这些我更看重的方面。"],
+                    ["A. 内心的充盈与平和：有明确的人生目标，精神世界丰富。", "B. 深厚的人际关系：拥有高质量的亲情、友情或爱情。", "C. 时间的自主与自由：能够自由支配自己的时间，做喜欢的事。", "D. 社会的认可与成就：在事业或公共领域获得广泛的尊重和肯定。", "E. 我无法想象一个与物质消费完全无关的理想生活。"],
+                    ["A. '钱不是花掉了，而是换了一种方式陪在你身边。'", "B. '在力所能及的范围内宠爱自己，很有必要。'", "C. '消费带来的快乐是短暂的，投资自己才是长久的。'", "D. '节俭和储蓄能带给我更大的安全感和自由。'"],
+                    ["A. 短暂的愉悦和满足感", "B. 成就感，觉得自己的品味得到了印证", "C. 焦虑，担心下一笔消费在哪里", "D. 空虚，感觉这种满足转瞬即逝", "E. 放松，觉得是对自己努力的奖励", "F. 后悔，觉得花了不必要的钱"],
+                    ["A. 我的消费定义了我是一个什么样的人。", "B. 我常常通过购买别人认可的东西来获得自我认同。", "C. 有时我会感觉，不是我在控制消费，而是消费的欲望在控制我。", "D. 如果不追求某种程度的'精致'，我会担心自己在社交中落后或被看不起。", "E. 我购买的东西，更多是为了向别人展示一个'理想的我'，而非满足真实的'我'。"]
+                ],
+                result: null
+            },
+            currentPreRecord: null
+        };
+
+        // ==================== 八种人格类型定义 ====================
+        const PersonalityTypes = {
+            'MIM': {
+                type: 'MIM-极简隐士',
+                description: '你主动告别物质丰饶，向内探寻生命必需',
+                detail: '坚信"少即是多"，审慎对待每一件进入生活的物品。它们必须实用、心爱并各得其所。从简洁中你收获了清晰的心智与宝贵的自由，消费欲的降低反而滋养了更丰盈的内心世界。对你而言"精致"是祛除冗余后的本真与宁静。你证明了极致的奢华并非物质的堆砌，而是空间的留白与精神的丰盈。',
+                color: 'text-emerald-600'
+            },
+            'SFC': {
+                type: 'SFC-财富管家',
+                description: '你以战略家视角管理财务，视消费为严肃的资源分配',
+                detail: '每一笔支出都锚定长远目标：财富增值、能力提升或安全保障。你偏好投资型消费，从中获得安全感与成就感。通过规划与延迟满足，你换取未来更大的自由选择权。你的"精致"体现在卓越的人生管理上。你深知，真正的富足不在于挥霍的能力，而在于拥有选择生活方式的坚实底气。',
+                color: 'text-blue-600'
+            },
+            'GMA': {
+                type: 'GMA-中庸行者',
+                description: '你深谙"过犹不及"，在消费世界中从容自处',
+                detail: '你既不压抑欲望，也不放纵虚荣，而是在"需要"、"喜爱"与"负担"间寻找优雅平衡。你注重实用与长效，追求可持续、有分寸的生活美学。不为外界标准所动，你内心自有准绳。这份清醒的节制，让你远离消费焦虑，收获扎实的幸福感和生活掌控力。你的"精致"，是恰到好处的智慧。',
+                color: 'text-amber-600'
+            },
+            'EPIC': {
+                type: 'EPIC-体验先锋',
+                description: '你是笃定的"体验派"，坚信最值得的投资是丰富人生维度',
+                detail: '你为旅行、课程、展览等能拓宽视野、带来新知的事物付费。你的消费清单即成长地图，为故事、记忆与个人蜕变投资。你活在过程中，而非占有结果。这种消费观赋予人生流动的生机与厚实质感。你深知，最宝贵的奢侈品是经历，它会内化为独属你的眼界与格局，无可替代。',
+                color: 'text-purple-600'
+            },
+            'BTS': {
+                type: 'BTS-幕后贵族',
+                description: '你的生活有着两面：一面是为热爱或情绪"挥金如土"的高光时刻，另一面是精打细算的日常',
+                detail: '你愿为瞬间心动或压力释放买单，享受即时快乐。但这快乐常与"值不值"的懊恼并存。你在感性的欲望与理性的现实间拉扯。学会建立更健康的情绪应对机制与消费计划，能让快乐更纯粹持久，无需用后续的"吃土"为瞬间绚烂买单。',
+                color: 'text-rose-600'
+            },
+            'VOS': {
+                type: 'VOS-奢品信徒',
+                description: '你相信品牌是品味、成就与圈层的无声宣言',
+                detail: '你消费的不只是商品，更是其承载的符号与社会认同。你尊重工艺与历史，从中获得审美与身份满足。这带来了强烈的自我认同与归属感。但需警惕，当个人价值完全系于外部符号，便交出了自我定义的主权。真正的奢侈是源自内心丰盈、无需证明的自信与自由。',
+                color: 'text-red-600'
+            },
+            'PERF': {
+                type: 'PERF-人设演员',
+                description: '你的消费是精心的形象投资，旨在塑造令人羡慕的"理想自我"',
+                detail: '你深谙社交媒体美学，乐于为提升形象、彰显生活方式的产品和体验付费。他人的关注与赞美是核心驱动力。然而过度依赖外界反馈来确认自我价值，可能使你倦怠。真正的魅力源于真实的个性与内在丰沛。偶尔卸下"表演"，为自己而活时"精致"才最具松弛感与生命力。',
+                color: 'text-pink-600'
+            },
+            'FOMO': {
+                type: 'FOMO-焦虑仓鼠',
+                description: '你是数字时代的潮流捕手，总在追赶，为"错过"焦虑',
+                detail: '"人有我必有"是你的消费铁律，外界动态能轻易点燃你的物欲。下单能给你带来短暂的快慰，但转眼你又被新潮流裹挟，陷入"种草-拔草"的循环。精致成了一场无休止的竞赛，你在满足与焦虑间摇摆。试着从信息洪流中抽身吧，你会发现内心的笃定远比无尽占有更能滋养生命。',
+                color: 'text-indigo-600'
+            }
+        };
+
+        // ==================== DOM元素引用 ====================
+        const DOM = {
+            walletBalance: null,
+            walletCurrency: null,
+            monthlyIncome: null,
+            monthlyIncomeContainer: null,
+            dailyQuote: null,
+            itemName: null,
+            itemPrice: null,
+            consumptionType: null,
+            consumptionMotivation: null,
+            realNeedSlider: null,
+            emotionSlider: null,
+            socialSlider: null,
+            realNeedValue: null,
+            emotionValue: null,
+            socialValue: null,
+            realNeedBar: null,
+            emotionBar: null,
+            socialBar: null,
+            desireIndex: null,
+            postItemName: null,
+            postItemPrice: null,
+            postItemType: null,
+            postDesireIndex: null,
+            purchaseTime: null,
+            emotionOptions: null,
+            consumptionReflection: null,
+            practicalValueSlider: null,
+            emotionalValueSlider: null,
+            practicalValueText: null,
+            emotionalValueText: null,
+            practicalValueBar: null,
+            emotionalValueBar: null,
+            recordPreConsumption: null,
+            savePostRecord: null,
+            publishReflection: null,
+            questionTitle: null,
+            questionText: null,
+            testOptions: null,
+            prevQuestion: null,
+            nextQuestion: null,
+            testResult: null,
+            personalityType: null,
+            personalityDescription: null,
+            personalityDetail: null,
+            retakeTest: null,
+            reflectionPostsContainer: null,
+            reflectionRanking: null,
+            progressBar: null,
+            progressText: null,
+            progressPercent: null,
+            nextButton: null,
+            // 新增的未来规划相关DOM
+            warningLevel: null,
+            spentAmount: null,
+            budgetProgressBar: null,
+            budgetStatusText: null,
+            riskWarnings: null,
+            optimizationSuggestions: null,
+            essentialBudget: null,
+            cultureBudget: null,
+            investmentBudget: null,
+            applyBudgetPlan: null,
+            // 新增：重置按钮
+            resetDataBtn: null
+        };
+
+        // ==================== 初始化DOM引用 ====================
+        function initDOMReferences() {
+            DOM.walletBalance = document.getElementById('walletBalance');
+            DOM.walletCurrency = document.getElementById('walletCurrency');
+            DOM.monthlyIncome = document.getElementById('monthlyIncome');
+            DOM.monthlyIncomeContainer = document.getElementById('monthlyIncomeContainer');
+            DOM.dailyQuote = document.getElementById('dailyQuote');
+            
+            // 消费前记录相关
+            DOM.itemName = document.getElementById('itemName');
+            DOM.itemPrice = document.getElementById('itemPrice');
+            DOM.consumptionType = document.getElementById('consumptionType');
+            DOM.consumptionMotivation = document.getElementById('consumptionMotivation');
+            
+            // 欲望强度滑块
+            DOM.realNeedSlider = document.getElementById('realNeedSlider');
+            DOM.emotionSlider = document.getElementById('emotionSlider');
+            DOM.socialSlider = document.getElementById('socialSlider');
+            DOM.realNeedValue = document.getElementById('realNeedValue');
+            DOM.emotionValue = document.getElementById('emotionValue');
+            DOM.socialValue = document.getElementById('socialValue');
+            DOM.realNeedBar = document.getElementById('realNeedBar');
+            DOM.emotionBar = document.getElementById('emotionBar');
+            DOM.socialBar = document.getElementById('socialBar');
+            DOM.desireIndex = document.getElementById('desireIndex');
+            
+            // 消费后记录相关
+            DOM.postItemName = document.getElementById('postItemName');
+            DOM.postItemPrice = document.getElementById('postItemPrice');
+            DOM.postItemType = document.getElementById('postItemType');
+            DOM.postDesireIndex = document.getElementById('postDesireIndex');
+            DOM.purchaseTime = document.getElementById('purchaseTime');
+            DOM.emotionOptions = document.getElementById('emotionOptions');
+            DOM.consumptionReflection = document.getElementById('consumptionReflection');
+            DOM.practicalValueSlider = document.getElementById('practicalValueSlider');
+            DOM.emotionalValueSlider = document.getElementById('emotionalValueSlider');
+            DOM.practicalValueText = document.getElementById('practicalValueText');
+            DOM.emotionalValueText = document.getElementById('emotionalValueText');
+            DOM.practicalValueBar = document.getElementById('practicalValueBar');
+            DOM.emotionalValueBar = document.getElementById('emotionalValueBar');
+            
+            // 按钮
+            DOM.recordPreConsumption = document.getElementById('recordPreConsumption');
+            DOM.savePostRecord = document.getElementById('savePostRecord');
+            DOM.publishReflection = document.getElementById('publishReflection');
+            
+            // 测试相关
+            DOM.questionTitle = document.getElementById('questionTitle');
+            DOM.questionText = document.getElementById('questionText');
+            DOM.testOptions = document.getElementById('testOptions');
+            DOM.prevQuestion = document.getElementById('prevQuestion');
+            DOM.nextQuestion = document.getElementById('nextQuestion');
+            DOM.testResult = document.getElementById('testResult');
+            DOM.personalityType = document.getElementById('personalityType');
+            DOM.personalityDescription = document.getElementById('personalityDescription');
+            DOM.personalityDetail = document.getElementById('personalityDetail');
+            DOM.retakeTest = document.getElementById('retakeTest');
+            DOM.progressBar = document.getElementById('progressBar');
+            DOM.progressText = document.getElementById('progressText');
+            DOM.progressPercent = document.getElementById('progressPercent');
+            
+            // 容器
+            DOM.reflectionPostsContainer = document.getElementById('reflectionPostsContainer');
+            DOM.reflectionRanking = document.getElementById('reflectionRanking');
+            
+            // 重新获取nextButton
+            DOM.nextButton = document.getElementById('nextQuestion');
+            
+            // 新增：未来规划相关DOM
+            DOM.warningLevel = document.getElementById('warningLevel');
+            DOM.spentAmount = document.getElementById('spentAmount');
+            DOM.budgetProgressBar = document.getElementById('budgetProgressBar');
+            DOM.budgetStatusText = document.getElementById('budgetStatusText');
+            DOM.riskWarnings = document.getElementById('riskWarnings');
+            DOM.optimizationSuggestions = document.getElementById('optimizationSuggestions');
+            DOM.essentialBudget = document.getElementById('essentialBudget');
+            DOM.cultureBudget = document.getElementById('cultureBudget');
+            DOM.investmentBudget = document.getElementById('investmentBudget');
+            DOM.applyBudgetPlan = document.getElementById('applyBudgetPlan');
+            
+            // 新增：重置按钮
+            DOM.resetDataBtn = document.getElementById('resetDataBtn');
+        }
+
+        // ==================== 新增：清空数据功能 ====================
+        function resetAllData() {
+            // 确认对话框
+            const confirmed = confirm('确定要清空所有消费数据并重新开始吗？\n\n此操作将：\n• 清空所有消费记录\n• 重置钱包余额和预算\n• 保留人格测试结果和反思帖子\n\n此操作不可撤销！');
+            
+            if (!confirmed) {
+                return;
+            }
+            
+            // 重置消费相关数据
+            AppState.consumptionRecords = [];
+            AppState.currentPreRecord = null;
+            
+            // 重置钱包到初始状态
+            AppState.wallet.balance = 3000;
+            AppState.wallet.monthlyIncome = 5000;
+            AppState.wallet.budget = {
+                essentials: 2000,
+                culture: 800,
+                investment: 1200,
+                social: 500,
+                impulse: 500
+            };
+            
+            // 清空消费前表单
+            if (DOM.itemName) DOM.itemName.value = '';
+            if (DOM.itemPrice) DOM.itemPrice.value = '';
+            if (DOM.consumptionMotivation) DOM.consumptionMotivation.value = '';
+            if (DOM.consumptionType) {
+                DOM.consumptionType.querySelectorAll('span').forEach(s => {
+                    s.classList.remove('type-selected');
+                });
+                // 设置默认类型为必需品
+                const defaultType = DOM.consumptionType.querySelector('[data-value="必需品"]');
+                if (defaultType) defaultType.classList.add('type-selected');
+            }
+            
+            // 重置欲望强度滑块
+            if (DOM.realNeedSlider) {
+                DOM.realNeedSlider.value = 65;
+                if (DOM.realNeedValue) DOM.realNeedValue.textContent = 65;
+                if (DOM.realNeedBar) DOM.realNeedBar.style.width = '65%';
+            }
+            if (DOM.emotionSlider) {
+                DOM.emotionSlider.value = 30;
+                if (DOM.emotionValue) DOM.emotionValue.textContent = 30;
+                if (DOM.emotionBar) DOM.emotionBar.style.width = '30%';
+            }
+            if (DOM.socialSlider) {
+                DOM.socialSlider.value = 45;
+                if (DOM.socialValue) DOM.socialValue.textContent = 45;
+                if (DOM.socialBar) DOM.socialBar.style.width = '45%';
+            }
+            updateDesireIndex();
+            
+            // 清空消费后表单
+            if (DOM.emotionOptions) {
+                DOM.emotionOptions.querySelectorAll('.emotion-option').forEach(el => {
+                    el.classList.remove('emotion-selected');
+                });
+                // 设置默认情绪为满意愉悦
+                const defaultEmotion = DOM.emotionOptions.querySelector('[data-emotion="满意愉悦"]');
+                if (defaultEmotion) defaultEmotion.classList.add('emotion-selected');
+            }
+            if (DOM.consumptionReflection) DOM.consumptionReflection.value = '';
+            if (DOM.practicalValueSlider) {
+                DOM.practicalValueSlider.value = 8;
+                if (DOM.practicalValueText) DOM.practicalValueText.textContent = 8;
+                if (DOM.practicalValueBar) DOM.practicalValueBar.style.width = '80%';
+            }
+            if (DOM.emotionalValueSlider) {
+                DOM.emotionalValueSlider.value = 9;
+                if (DOM.emotionalValueText) DOM.emotionalValueText.textContent = 9;
+                if (DOM.emotionalValueBar) DOM.emotionalValueBar.style.width = '90%';
+            }
+            
+            // 更新显示
+            updateWalletDisplay();
+            updateCharts();
+            updateFuturePlanning();
+            
+            // 保存到本地存储
+            saveStateToLocalStorage();
+            
+            // 显示成功消息
+            alert('数据已成功重置！\n\n所有消费记录已清空，钱包余额已恢复为3000 EC，您可以重新开始记录您的消费旅程。');
+            
+            // 滚动到首页
+            const homeSection = document.querySelector('#home');
+            if (homeSection) {
+                homeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // ==================== 新增：哲学名言显示函数 ====================
+        function displayRandomQuote() {
+            if (!DOM.dailyQuote) return;
+            
+            // 随机选择一条名言
+            const randomIndex = Math.floor(Math.random() * PhilosophicalQuotes.length);
+            const quote = PhilosophicalQuotes[randomIndex];
+            
+            DOM.dailyQuote.innerHTML = `
+                <p class="text-gray-700 italic ${quote.color}">"${quote.quote}"</p>
+                <p class="text-gray-500 mt-2 text-sm">—— ${quote.author}</p>
+            `;
+            
+            // 添加动画效果
+            DOM.dailyQuote.classList.remove('quote-animation');
+            void DOM.dailyQuote.offsetWidth; // 触发重排
+            DOM.dailyQuote.classList.add('quote-animation');
+        }
+
+        // ==================== 新增：未来消费规划功能 ====================
+        function updateFuturePlanning() {
+            if (!DOM.spentAmount || !DOM.budgetProgressBar || !DOM.budgetStatusText) return;
+            
+            // 计算本月已消费总额
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            
+            const monthlySpending = AppState.consumptionRecords.filter(record => {
+                const recordDate = new Date(record.timestamp);
+                return recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear;
+            }).reduce((sum, record) => sum + record.price, 0);
+            
+            // 计算月度总收入
+            const monthlyIncome = AppState.wallet.monthlyIncome;
+            
+            // 更新显示
+            DOM.spentAmount.textContent = `${monthlySpending} EC`;
+            
+            // 计算预算使用百分比
+            const budgetPercentage = monthlyIncome > 0 ? Math.min(100, (monthlySpending / monthlyIncome) * 100) : 0;
+            DOM.budgetProgressBar.style.width = `${budgetPercentage}%`;
+            
+            // 更新预算状态文本
+            let statusText = '';
+            let warningLevel = '';
+            let warningColor = 'bg-amber-100 text-amber-800';
+            
+            if (budgetPercentage >= 90) {
+                statusText = '预算严重超支！建议立即停止非必要消费';
+                warningLevel = '高危警告';
+                warningColor = 'bg-red-100 text-red-800';
+            } else if (budgetPercentage >= 70) {
+                statusText = '预算使用较多，请谨慎控制后续消费';
+                warningLevel = '高度提醒';
+                warningColor = 'bg-orange-100 text-orange-800';
+            } else if (budgetPercentage >= 50) {
+                statusText = '预算使用适中，可适当安排后续消费';
+                warningLevel = '中等提醒';
+                warningColor = 'bg-amber-100 text-amber-800';
+            } else {
+                statusText = '本月预算充足，可合理规划消费';
+                warningLevel = '低风险';
+                warningColor = 'bg-green-100 text-green-800';
+            }
+            
+            DOM.budgetStatusText.textContent = statusText;
+            DOM.warningLevel.textContent = warningLevel;
+            DOM.warningLevel.className = `px-3 py-1 ${warningColor} rounded-full text-sm font-medium warning-badge`;
+            
+            // 更新风险警示
+            updateRiskWarnings();
+            
+            // 更新优化建议
+            updateOptimizationSuggestions();
+            
+            // 更新智能预算分配
+            updateSmartBudgetAllocation();
+        }
+
+        function updateRiskWarnings() {
+            if (!DOM.riskWarnings) return;
+            
+            DOM.riskWarnings.innerHTML = '';
+            const warnings = [];
+            
+            // 分析冲动消费比例
+            const impulseCount = AppState.consumptionRecords.filter(r => r.type === '冲动消费').length;
+            const totalCount = AppState.consumptionRecords.length;
+            
+            if (totalCount > 0) {
+                const impulseRatio = impulseCount / totalCount;
+                
+                if (impulseRatio > 0.4) {
+                    warnings.push({
+                        text: '检测到高比例冲动消费（超过40%）',
+                        icon: 'mdi:alert',
+                        color: 'text-red-500'
+                    });
+                } else if (impulseRatio > 0.2) {
+                    warnings.push({
+                        text: '冲动消费比例偏高（超过20%）',
+                        icon: 'mdi:alert-circle',
+                        color: 'text-orange-500'
+                    });
+                }
+                
+                // 分析低满意度消费
+                const lowSatisfactionCount = AppState.consumptionRecords.filter(r => r.satisfaction < 5).length;
+                const lowSatisfactionRatio = lowSatisfactionCount / totalCount;
+                
+                if (lowSatisfactionRatio > 0.3) {
+                    warnings.push({
+                        text: '超过30%的消费满意度较低',
+                        icon: 'mdi:emoticon-sad',
+                        color: 'text-amber-500'
+                    });
+                }
+                
+                // 分析情绪驱动消费
+                const highEmotionCount = AppState.consumptionRecords.filter(r => r.emotion > 70).length;
+                if (highEmotionCount > 3) {
+                    warnings.push({
+                        text: '情绪驱动消费较多',
+                        icon: 'mdi:heart-flash',
+                        color: 'text-pink-500'
+                    });
+                }
+            }
+            
+            // 如果没有警告，显示积极信息
+            if (warnings.length === 0) {
+                warnings.push({
+                    text: '暂无检测到高风险消费模式',
+                    icon: 'mdi:check-circle',
+                    color: 'text-green-500'
+                });
+            }
+            
+            // 渲染警告列表
+            warnings.forEach(warning => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start gap-2';
+                li.innerHTML = `
+                    <iconify-icon icon="${warning.icon}" class="${warning.color} mt-0.5"></iconify-icon>
+                    <span>${warning.text}</span>
+                `;
+                DOM.riskWarnings.appendChild(li);
+            });
+        }
+
+        function updateOptimizationSuggestions() {
+            if (!DOM.optimizationSuggestions) return;
+            
+            DOM.optimizationSuggestions.innerHTML = '';
+            const suggestions = [];
+            
+            // 根据消费记录生成建议
+            const totalCount = AppState.consumptionRecords.length;
+            
+            if (totalCount === 0) {
+                suggestions.push({
+                    text: '开始记录消费，获取个性化建议',
+                    icon: 'mdi:lightbulb',
+                    color: 'text-amber-500'
+                });
+                suggestions.push({
+                    text: '设定月度预算目标',
+                    icon: 'mdi:target',
+                    color: 'text-blue-500'
+                });
+            } else {
+                // 分析消费类型分布
+                const typeCounts = {};
+                AppState.consumptionRecords.forEach(record => {
+                    typeCounts[record.type] = (typeCounts[record.type] || 0) + 1;
+                });
+                
+                // 自我投资建议
+                const investmentRatio = (typeCounts['自我投资'] || 0) / totalCount;
+                if (investmentRatio < 0.2) {
+                    suggestions.push({
+                        text: '考虑增加自我投资类消费比例',
+                        icon: 'mdi:school',
+                        color: 'text-emerald-500'
+                    });
+                }
+                
+                // 文化体验建议
+                const cultureRatio = (typeCounts['文化体验'] || 0) / totalCount;
+                if (cultureRatio < 0.15) {
+                    suggestions.push({
+                        text: '适当增加文化体验消费',
+                        icon: 'mdi:book-open',
+                        color: 'text-purple-500'
+                    });
+                }
+                
+                // 冲动消费控制建议
+                const impulseRatio = (typeCounts['冲动消费'] || 0) / totalCount;
+                if (impulseRatio > 0.1) {
+                    suggestions.push({
+                        text: '建立24小时冷静期机制',
+                        icon: 'mdi:timer-sand',
+                        color: 'text-amber-500'
+                    });
+                }
+                
+                // 必需品优化建议
+                const essentialRatio = (typeCounts['必需品'] || 0) / totalCount;
+                if (essentialRatio > 0.6) {
+                    suggestions.push({
+                        text: '必需品占比高，可探索性价比优化',
+                        icon: 'mdi:currency-usd',
+                        color: 'text-green-500'
+                    });
+                }
+            }
+            
+            // 添加通用建议
+            suggestions.push({
+                text: '每周回顾消费记录，调整消费模式',
+                icon: 'mdi:chart-line',
+                color: 'text-blue-500'
+            });
+            
+            // 渲染建议列表
+            suggestions.forEach(suggestion => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start gap-2';
+                li.innerHTML = `
+                    <iconify-icon icon="${suggestion.icon}" class="${suggestion.color} mt-0.5"></iconify-icon>
+                    <span>${suggestion.text}</span>
+                `;
+                DOM.optimizationSuggestions.appendChild(li);
+            });
+        }
+
+        function updateSmartBudgetAllocation() {
+            if (!DOM.essentialBudget || !DOM.cultureBudget || !DOM.investmentBudget) return;
+            
+            const monthlyIncome = AppState.wallet.monthlyIncome;
+            const totalCount = AppState.consumptionRecords.length;
+            
+            if (totalCount === 0) {
+                // 默认预算分配
+                DOM.essentialBudget.textContent = `${Math.round(monthlyIncome * 0.4)} EC`;
+                DOM.cultureBudget.textContent = `${Math.round(monthlyIncome * 0.2)} EC`;
+                DOM.investmentBudget.textContent = `${Math.round(monthlyIncome * 0.25)} EC`;
+                return;
+            }
+            
+            // 根据历史消费模式智能分配
+            const typeTotals = {};
+            AppState.consumptionRecords.forEach(record => {
+                typeTotals[record.type] = (typeTotals[record.type] || 0) + record.price;
+            });
+            
+            const totalSpent = Object.values(typeTotals).reduce((a, b) => a + b, 0);
+            
+            // 计算各类型消费比例
+            const essentialRatio = (typeTotals['必需品'] || 0) / totalSpent;
+            const cultureRatio = (typeTotals['文化体验'] || 0) / totalSpent;
+            const investmentRatio = (typeTotals['自我投资'] || 0) / totalSpent;
+            const socialRatio = (typeTotals['社交需求'] || 0) / totalSpent;
+            const impulseRatio = (typeTotals['冲动消费'] || 0) / totalSpent;
+            
+            // 智能调整：鼓励投资和文化，控制冲动消费
+            const adjustedEssentialRatio = Math.max(0.3, Math.min(0.5, essentialRatio));
+            const adjustedCultureRatio = Math.max(0.15, Math.min(0.25, cultureRatio + 0.05));
+            const adjustedInvestmentRatio = Math.max(0.2, Math.min(0.35, investmentRatio + 0.1));
+            const adjustedSocialRatio = Math.max(0.05, Math.min(0.15, socialRatio));
+            const adjustedImpulseRatio = Math.max(0, Math.min(0.1, impulseRatio - 0.05));
+            
+            // 计算分配金额
+            const essentialAmount = Math.round(monthlyIncome * adjustedEssentialRatio);
+            const cultureAmount = Math.round(monthlyIncome * adjustedCultureRatio);
+            const investmentAmount = Math.round(monthlyIncome * adjustedInvestmentRatio);
+            
+            DOM.essentialBudget.textContent = `${essentialAmount} EC`;
+            DOM.cultureBudget.textContent = `${cultureAmount} EC`;
+            DOM.investmentBudget.textContent = `${investmentAmount} EC`;
+            
+            // 保存调整后的预算
+            AppState.wallet.budget = {
+                essentials: essentialAmount,
+                culture: cultureAmount,
+                investment: investmentAmount,
+                social: Math.round(monthlyIncome * adjustedSocialRatio),
+                impulse: Math.round(monthlyIncome * adjustedImpulseRatio)
+            };
+        }
+
+        // ==================== 本地存储功能 ====================
+        function saveStateToLocalStorage() {
+            try {
+                localStorage.setItem('AppState', JSON.stringify(AppState));
+                console.log('状态已保存到本地存储');
+            } catch (e) {
+                console.error('保存到本地存储失败:', e);
+            }
+        }
+
+        function loadStateFromLocalStorage() {
+            try {
+                const savedState = localStorage.getItem('AppState');
+                if (savedState) {
+                    const parsedState = JSON.parse(savedState);
+                    
+                    // 合并状态，保持默认值
+                    Object.assign(AppState.wallet, parsedState.wallet || {});
+                    AppState.consumptionRecords = parsedState.consumptionRecords || [];
+                    
+                    // 如果有保存的反思帖子，使用保存的，否则使用默认
+                    if (parsedState.reflectionPosts && parsedState.reflectionPosts.length > 0) {
+                        AppState.reflectionPosts = parsedState.reflectionPosts;
+                    }
+                    
+                    // 合并人格测试数据
+                    if (parsedState.personalityTest) {
+                        // 确保不覆盖问题和选项数据
+                        const savedTest = parsedState.personalityTest;
+                        AppState.personalityTest.currentQuestion = savedTest.currentQuestion || 1;
+                        AppState.personalityTest.answers = savedTest.answers || {};
+                        AppState.personalityTest.result = savedTest.result || null;
+                    }
+                    
+                    updateWalletDisplay();
+                    updateReflectionPosts();
+                    updateReflectionRanking();
+                    
+                    // 更新测试显示
+                    if (AppState.personalityTest.currentQuestion > 1) {
+                        updatePersonalityTestQuestion();
+                        updateProgressBar();
+                    }
+                    
+                    // 如果已经有结果，显示结果
+                    if (AppState.personalityTest.result) {
+                        showTestResult();
+                    }
+                    
+                    return true;
+                }
+            } catch (e) {
+                console.error('从本地存储加载失败:', e);
+            }
+            return false;
+        }
+
+        // ==================== 页面初始化 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM加载完成，开始初始化...');
+            
+            // 初始化DOM引用
+            initDOMReferences();
+            
+            // 设置事件监听器
+            setupEventListeners();
+            
+            // 显示随机名言
+            displayRandomQuote();
+            
+            // 尝试从本地存储加载数据
+            const hasSavedData = loadStateFromLocalStorage();
+            
+            // 如果没有保存的数据，设置示例数据
+            if (!hasSavedData) {
+                console.log('没有本地存储数据，设置示例数据');
+                setupExampleData();
+            }
+            
+            // 初始化欲望指数显示
+            updateDesireIndex();
+            
+            // 初始化图表（延迟执行，确保DOM完全渲染）
+            setTimeout(initCharts, 300);
+            
+            // 更新测试问题
+            updatePersonalityTestQuestion();
+            
+            // 更新未来规划
+            updateFuturePlanning();
+            
+            console.log('页面初始化完成');
+        });
+
+        // ==================== 事件监听器设置 ====================
+        function setupEventListeners() {
+            console.log('设置事件监听器...');
+            
+            // 本月薪金可编辑功能
+            if (DOM.monthlyIncomeContainer) {
+                DOM.monthlyIncomeContainer.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const currentIncome = AppState.wallet.monthlyIncome;
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'income-input';
+                    input.value = currentIncome;
+                    input.min = '0';
+                    input.step = '100';
+                    
+                    this.innerHTML = '本月薪金: ';
+                    this.appendChild(input);
+                    this.appendChild(document.createTextNode(' EC'));
+                    
+                    input.focus();
+                    input.select();
+                    
+                    input.addEventListener('blur', function() {
+                        saveMonthlyIncome(this.value);
+                    });
+                    
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            this.blur();
+                        }
+                    });
+                });
+            }
+            
+            // 消费类型选择
+            if (DOM.consumptionType) {
+                DOM.consumptionType.querySelectorAll('span').forEach(span => {
+                    span.addEventListener('click', function() {
+                        DOM.consumptionType.querySelectorAll('span').forEach(s => {
+                            s.classList.remove('type-selected');
+                        });
+                        this.classList.add('type-selected');
+                        console.log('选择了消费类型:', this.getAttribute('data-value'));
+                    });
+                });
+            }
+            
+            // 欲望强度滑块
+            if (DOM.realNeedSlider) {
+                DOM.realNeedSlider.addEventListener('input', function() {
+                    const value = this.value;
+                    if (DOM.realNeedValue) DOM.realNeedValue.textContent = value;
+                    if (DOM.realNeedBar) DOM.realNeedBar.style.width = value + '%';
+                    updateDesireIndex();
+                });
+            }
+            
+            if (DOM.emotionSlider) {
+                DOM.emotionSlider.addEventListener('input', function() {
+                    const value = this.value;
+                    if (DOM.emotionValue) DOM.emotionValue.textContent = value;
+                    if (DOM.emotionBar) DOM.emotionBar.style.width = value + '%';
+                    updateDesireIndex();
+                });
+            }
+            
+            if (DOM.socialSlider) {
+                DOM.socialSlider.addEventListener('input', function() {
+                    const value = this.value;
+                    if (DOM.socialValue) DOM.socialValue.textContent = value;
+                    if (DOM.socialBar) DOM.socialBar.style.width = value + '%';
+                    updateDesireIndex();
+                });
+            }
+            
+            // 价值评分滑块
+            if (DOM.practicalValueSlider) {
+                DOM.practicalValueSlider.addEventListener('input', function() {
+                    const value = this.value;
+                    if (DOM.practicalValueText) DOM.practicalValueText.textContent = value;
+                    if (DOM.practicalValueBar) DOM.practicalValueBar.style.width = (value * 10) + '%';
+                });
+            }
+            
+            if (DOM.emotionalValueSlider) {
+                DOM.emotionalValueSlider.addEventListener('input', function() {
+                    const value = this.value;
+                    if (DOM.emotionalValueText) DOM.emotionalValueText.textContent = value;
+                    if (DOM.emotionalValueBar) DOM.emotionalValueBar.style.width = (value * 10) + '%';
+                });
+            }
+            
+            // 消费前记录按钮
+            if (DOM.recordPreConsumption) {
+                DOM.recordPreConsumption.addEventListener('click', recordPreConsumption);
+            }
+            
+            // 消费后情绪选择
+            if (DOM.emotionOptions) {
+                DOM.emotionOptions.querySelectorAll('.emotion-option').forEach(option => {
+                    option.addEventListener('click', function() {
+                        DOM.emotionOptions.querySelectorAll('.emotion-option').forEach(el => {
+                            el.classList.remove('emotion-selected');
+                        });
+                        this.classList.add('emotion-selected');
+                        console.log('选择了情绪:', this.getAttribute('data-emotion'));
+                    });
+                });
+            }
+            
+            // 消费后记录保存按钮
+            if (DOM.savePostRecord) {
+                DOM.savePostRecord.addEventListener('click', savePostRecord);
+            }
+            
+            // 发表反思按钮
+            if (DOM.publishReflection) {
+                DOM.publishReflection.addEventListener('click', publishReflection);
+            }
+            
+            // 上一题按钮
+            if (DOM.prevQuestion) {
+                DOM.prevQuestion.addEventListener('click', prevTestQuestion);
+            }
+            
+            // 下一题按钮 - 修复这里
+            if (DOM.nextButton) {
+                DOM.nextButton.addEventListener('click', nextTestQuestion);
+            }
+            
+            // 重新测试按钮
+            if (DOM.retakeTest) {
+                DOM.retakeTest.addEventListener('click', retakeTest);
+            }
+            
+            // 应用预算方案按钮
+            if (DOM.applyBudgetPlan) {
+                DOM.applyBudgetPlan.addEventListener('click', function() {
+                    const confirmed = confirm('确定应用此预算分配方案吗？这将调整您的月度预算分配。');
+                    if (confirmed) {
+                        alert('预算方案已应用！您可以在消费前记录中参考这些预算限制。');
+                        saveStateToLocalStorage();
+                    }
+                });
+            }
+            
+            // 新增：重置数据按钮
+            if (DOM.resetDataBtn) {
+                DOM.resetDataBtn.addEventListener('click', resetAllData);
+            }
+            
+            // 导航平滑滚动
+            document.querySelectorAll('nav a').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetSection = document.querySelector(targetId);
+                    if (targetSection) {
+                        targetSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        console.log('滚动到:', targetId);
+                    }
+                });
+            });
+            
+            console.log('事件监听器设置完成');
+        }
+
+        // ==================== 核心功能函数 ====================
+        function saveMonthlyIncome(income) {
+            const newIncome = parseInt(income) || 5000;
+            AppState.wallet.monthlyIncome = newIncome;
+            updateWalletDisplay();
+            saveStateToLocalStorage();
+            
+            // 恢复显示
+            DOM.monthlyIncomeContainer.innerHTML = `本月薪金: <span id="monthlyIncome">${newIncome}</span> EC`;
+            // 重新获取DOM引用
+            DOM.monthlyIncome = document.getElementById('monthlyIncome');
+            
+            // 更新未来规划
+            updateFuturePlanning();
+            
+            console.log('本月薪金已更新为:', newIncome);
+        }
+
+        function updateDesireIndex() {
+            if (!DOM.realNeedSlider || !DOM.emotionSlider || !DOM.socialSlider || !DOM.desireIndex) return;
+            
+            const realNeed = parseInt(DOM.realNeedSlider.value) || 0;
+            const emotion = parseInt(DOM.emotionSlider.value) || 0;
+            const social = parseInt(DOM.socialSlider.value) || 0;
+            
+            // 欲望指数计算：真实需求权重高，情绪和环境权重低
+            const index = Math.round((realNeed * 0.6 + emotion * 0.2 + social * 0.2) / 3);
+            DOM.desireIndex.textContent = index;
+            
+            // 更新描述
+            let description = '';
+            if (index >= 70) description = '高度理性';
+            else if (index >= 50) description = '中等偏理性';
+            else if (index >= 30) description = '中等偏感性';
+            else description = '高度感性';
+            
+            if (DOM.desireIndex.nextElementSibling) {
+                DOM.desireIndex.nextElementSibling.textContent = description;
+            }
+        }
+
+        function updateWalletDisplay() {
+            if (DOM.walletBalance) DOM.walletBalance.textContent = AppState.wallet.balance;
+            if (DOM.monthlyIncome) DOM.monthlyIncome.textContent = AppState.wallet.monthlyIncome;
+        }
+
+        function recordPreConsumption() {
+            if (!DOM.itemName || !DOM.itemPrice || !DOM.consumptionMotivation) return;
+            
+            const itemName = DOM.itemName.value.trim();
+            const price = parseInt(DOM.itemPrice.value) || 0;
+            const motivation = DOM.consumptionMotivation.value.trim();
+            const selectedType = DOM.consumptionType ? DOM.consumptionType.querySelector('.type-selected') : null;
+            const type = selectedType ? selectedType.getAttribute('data-value') : '其他';
+            
+            // 验证输入
+            if (!itemName) {
+                alert('请输入物品名称');
+                DOM.itemName.focus();
+                return;
+            }
+            
+            if (!price || price <= 0) {
+                alert('请输入有效的金额');
+                DOM.itemPrice.focus();
+                return;
+            }
+            
+            if (!motivation) {
+                alert('请输入消费动机');
+                DOM.consumptionMotivation.focus();
+                return;
+            }
+            
+            if (price > AppState.wallet.balance) {
+                alert('余额不足，请调整消费金额');
+                DOM.itemPrice.focus();
+                return;
+            }
+            
+            // 检查是否超出预算
+            const budget = AppState.wallet.budget;
+            if (budget) {
+                const monthlySpending = AppState.consumptionRecords.reduce((sum, record) => {
+                    const recordDate = new Date(record.timestamp);
+                    const currentMonth = new Date().getMonth();
+                    const currentYear = new Date().getFullYear();
+                    
+                    if (recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear) {
+                        return sum + record.price;
+                    }
+                    return sum;
+                }, 0);
+                
+                const remainingBudget = AppState.wallet.monthlyIncome - monthlySpending;
+                
+                if (price > remainingBudget * 0.3) {
+                    const confirmPurchase = confirm(`此消费将占用您本月剩余预算的${Math.round((price / remainingBudget) * 100)}%。确定要继续吗？`);
+                    if (!confirmPurchase) {
+                        return;
+                    }
+                }
+            }
+            
+            // 保存到当前记录
+            AppState.currentPreRecord = {
+                id: Date.now(),
+                itemName,
+                price,
+                type,
+                motivation,
+                desireIndex: parseInt(DOM.desireIndex ? DOM.desireIndex.textContent : '50') || 50,
+                timestamp: new Date().toISOString(),
+                realNeed: parseInt(DOM.realNeedSlider ? DOM.realNeedSlider.value : '65') || 65,
+                emotion: parseInt(DOM.emotionSlider ? DOM.emotionSlider.value : '30') || 30,
+                social: parseInt(DOM.socialSlider ? DOM.socialSlider.value : '45') || 45
+            };
+            
+            // 更新钱包余额
+            AppState.wallet.balance -= price;
+            updateWalletDisplay();
+            
+            // 填充消费后记录部分
+            if (DOM.postItemName) DOM.postItemName.textContent = itemName;
+            if (DOM.postItemPrice) DOM.postItemPrice.textContent = '¥' + price.toFixed(2);
+            if (DOM.postItemType) DOM.postItemType.textContent = type;
+            if (DOM.postDesireIndex) DOM.postDesireIndex.textContent = AppState.currentPreRecord.desireIndex;
+            if (DOM.purchaseTime) {
+                const now = new Date();
+                DOM.purchaseTime.textContent = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            // 清空消费前表单
+            if (DOM.itemName) DOM.itemName.value = '';
+            if (DOM.itemPrice) DOM.itemPrice.value = '';
+            if (DOM.consumptionMotivation) DOM.consumptionMotivation.value = '';
+            if (DOM.consumptionType) {
+                DOM.consumptionType.querySelectorAll('span').forEach(s => {
+                    s.classList.remove('type-selected');
+                });
+            }
+            
+            // 重置欲望强度
+            if (DOM.realNeedSlider) {
+                DOM.realNeedSlider.value = 65;
+                DOM.realNeedValue.textContent = 65;
+                DOM.realNeedBar.style.width = '65%';
+            }
+            if (DOM.emotionSlider) {
+                DOM.emotionSlider.value = 30;
+                DOM.emotionValue.textContent = 30;
+                DOM.emotionBar.style.width = '30%';
+            }
+            if (DOM.socialSlider) {
+                DOM.socialSlider.value = 45;
+                DOM.socialValue.textContent = 45;
+                DOM.socialBar.style.width = '45%';
+            }
+            updateDesireIndex();
+            
+            // 滚动到消费后记录部分
+            const postRecordSection = document.querySelector('#post-record');
+            if (postRecordSection) {
+                setTimeout(() => {
+                    postRecordSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+            
+            alert('消费前记录已保存！现在请完成消费后记录。');
+            saveStateToLocalStorage();
+            
+            console.log('消费前记录已保存:', AppState.currentPreRecord);
+        }
+
+        function savePostRecord() {
+            if (!AppState.currentPreRecord) {
+                alert('请先完成消费前记录');
+                return;
+            }
+            
+            const selectedEmotion = DOM.emotionOptions ? DOM.emotionOptions.querySelector('.emotion-selected') : null;
+            const reflection = DOM.consumptionReflection ? DOM.consumptionReflection.value.trim() : '';
+            const practicalValue = DOM.practicalValueSlider ? parseInt(DOM.practicalValueSlider.value) : 5;
+            const emotionalValue = DOM.emotionalValueSlider ? parseInt(DOM.emotionalValueSlider.value) : 5;
+            
+            if (!selectedEmotion) {
+                alert('请选择消费后的情绪');
+                return;
+            }
+            
+            if (!reflection) {
+                alert('请填写消费感悟');
+                DOM.consumptionReflection.focus();
+                return;
+            }
+            
+            // 创建完整消费记录
+            const consumptionRecord = {
+                ...AppState.currentPreRecord,
+                emotion: selectedEmotion.getAttribute('data-emotion'),
+                reflection,
+                practicalValue,
+                emotionalValue,
+                postTimestamp: new Date().toISOString(),
+                satisfaction: Math.round((practicalValue + emotionalValue) / 2)
+            };
+            
+            // 保存到历史记录
+            AppState.consumptionRecords.push(consumptionRecord);
+            
+            // 清空消费后表单
+            if (DOM.emotionOptions) {
+                DOM.emotionOptions.querySelectorAll('.emotion-option').forEach(el => {
+                    el.classList.remove('emotion-selected');
+                });
+            }
+            if (DOM.consumptionReflection) DOM.consumptionReflection.value = '';
+            if (DOM.practicalValueSlider) {
+                DOM.practicalValueSlider.value = 8;
+                DOM.practicalValueText.textContent = 8;
+                DOM.practicalValueBar.style.width = '80%';
+            }
+            if (DOM.emotionalValueSlider) {
+                DOM.emotionalValueSlider.value = 9;
+                DOM.emotionalValueText.textContent = 9;
+                DOM.emotionalValueBar.style.width = '90%';
+            }
+            
+            AppState.currentPreRecord = null;
+            
+            // 更新图表
+            updateCharts();
+            
+            // 更新未来规划
+            updateFuturePlanning();
+            
+            alert('消费记录已保存！');
+            saveStateToLocalStorage();
+            
+            // 滚动到报告部分
+            const reportSection = document.querySelector('#report');
+            if (reportSection) {
+                setTimeout(() => {
+                    reportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+            
+            console.log('消费后记录已保存:', consumptionRecord);
+        }
+
+        // ==================== 人格测试功能 ====================
+        function updatePersonalityTestQuestion() {
+            const test = AppState.personalityTest;
+            const current = test.currentQuestion - 1;
+            
+            if (current >= 0 && current < test.questions.length) {
+                // 更新问题标题和内容
+                DOM.questionTitle.textContent = `问题 ${test.currentQuestion}/36`;
+                DOM.questionText.textContent = test.questions[current];
+                
+                // 清空选项容器
+                DOM.testOptions.innerHTML = '';
+                
+                // 添加选项
+                const options = test.options[current];
+                options.forEach((optionText, index) => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'test-option bg-white/80 backdrop-blur-sm p-4 rounded-xl cursor-pointer hover:shadow-md transition flex items-center gap-3';
+                    optionDiv.innerHTML = `
+                        <div class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center flex-shrink-0">
+                            <span class="font-medium text-gray-700">${String.fromCharCode(65 + index)}</span>
+                        </div>
+                        <span class="text-gray-700">${optionText}</span>
+                    `;
+                    
+                    // 检查是否已选择此选项
+                    if (test.answers[test.currentQuestion] === String.fromCharCode(65 + index)) {
+                        optionDiv.classList.add('answer-selected');
+                        optionDiv.querySelector('div').classList.remove('border-gray-300');
+                        optionDiv.querySelector('div').classList.add('border-purple-500', 'bg-purple-50');
+                    }
+                    
+                    optionDiv.addEventListener('click', () => selectTestOption(String.fromCharCode(65 + index)));
+                    DOM.testOptions.appendChild(optionDiv);
+                });
+                
+                // 更新上一题按钮的显示
+                if (DOM.prevQuestion) {
+                    if (test.currentQuestion > 1) {
+                        DOM.prevQuestion.classList.remove('hidden');
+                    } else {
+                        DOM.prevQuestion.classList.add('hidden');
+                    }
+                }
+                
+                // 更新下一题按钮文本
+                if (DOM.nextButton) {
+                    if (test.currentQuestion === test.totalQuestions) {
+                        DOM.nextButton.textContent = '查看结果';
+                    } else {
+                        DOM.nextButton.textContent = '下一题';
+                    }
+                }
+                
+                // 更新进度条
+                updateProgressBar();
+            }
+        }
+
+        function selectTestOption(answer) {
+            const test = AppState.personalityTest;
+            test.answers[test.currentQuestion] = answer;
+            
+            // 更新UI显示
+            DOM.testOptions.querySelectorAll('.test-option').forEach((option, index) => {
+                const letter = String.fromCharCode(65 + index);
+                const circleDiv = option.querySelector('div');
+                
+                if (letter === answer) {
+                    option.classList.add('answer-selected');
+                    circleDiv.classList.remove('border-gray-300');
+                    circleDiv.classList.add('border-purple-500', 'bg-purple-50');
+                } else {
+                    option.classList.remove('answer-selected');
+                    circleDiv.classList.remove('border-purple-500', 'bg-purple-50');
+                    circleDiv.classList.add('border-gray-300');
+                }
+            });
+            
+            saveStateToLocalStorage();
+        }
+
+        function prevTestQuestion() {
+            if (AppState.personalityTest.currentQuestion > 1) {
+                AppState.personalityTest.currentQuestion--;
+                updatePersonalityTestQuestion();
+            }
+        }
+
+        function nextTestQuestion() {
+            const test = AppState.personalityTest;
+            
+            // 检查是否已回答当前问题
+            if (!test.answers[test.currentQuestion]) {
+                alert('请先选择答案再继续');
+                return;
+            }
+            
+            if (test.currentQuestion < test.totalQuestions) {
+                test.currentQuestion++;
+                updatePersonalityTestQuestion();
+            } else {
+                // 所有问题已回答，计算并显示结果
+                calculateTestResult();
+            }
+        }
+
+        function calculateTestResult() {
+            const test = AppState.personalityTest;
+            const answerCounts = { A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 };
+            
+            // 统计各选项数量
+            Object.values(test.answers).forEach(answer => {
+                if (answerCounts[answer] !== undefined) {
+                    answerCounts[answer]++;
+                }
+            });
+            
+            // 根据答案模式判断八种人格类型
+            const totalAnswers = Object.values(test.answers).length;
+            
+            // 计算各种答案类型的比例
+            const aRatio = answerCounts.A / totalAnswers;
+            const bRatio = answerCounts.B / totalAnswers;
+            const cRatio = answerCounts.C / totalAnswers;
+            const dRatio = answerCounts.D / totalAnswers;
+            const eRatio = answerCounts.E / totalAnswers;
+            
+            // 更精细的人格判断逻辑
+            let personalityType = 'GMA'; // 默认中庸行者
+            
+            // 判断逻辑：
+            // 1. MIM-极简隐士：A选项多，D选项少，理性消费
+            if (aRatio > 0.4 && dRatio < 0.2 && cRatio < 0.2) {
+                personalityType = 'MIM';
+            }
+            // 2. SFC-财富管家：A和C选项多，投资型消费
+            else if (aRatio > 0.3 && cRatio > 0.3 && answerCounts.D < 5) {
+                personalityType = 'SFC';
+            }
+            // 3. EPIC-体验先锋：D选项多，C选项多，追求体验
+            else if (dRatio > 0.3 && cRatio > 0.25 && bRatio < 0.2) {
+                personalityType = 'EPIC';
+            }
+            // 4. BTS-幕后贵族：B和E选项多，情绪消费
+            else if (bRatio > 0.3 && eRatio > 0.2) {
+                personalityType = 'BTS';
+            }
+            // 5. VOS-奢品信徒：B选项非常多，D选项多，追求品牌
+            else if (bRatio > 0.35 && dRatio > 0.25) {
+                personalityType = 'VOS';
+            }
+            // 6. PERF-人设演员：B和D选项多，关注形象
+            else if (bRatio > 0.3 && dRatio > 0.3 && answerCounts.D > 8) {
+                personalityType = 'PERF';
+            }
+            // 7. FOMO-焦虑仓鼠：B选项多，E选项多，焦虑型消费
+            else if (bRatio > 0.3 && eRatio > 0.15 && answerCounts.A < 5) {
+                personalityType = 'FOMO';
+            }
+            // 8. GMA-中庸行者：各种答案相对均衡
+            else {
+                personalityType = 'GMA';
+            }
+            
+            test.result = personalityType;
+            saveStateToLocalStorage();
+            showTestResult();
+        }
+
+        function showTestResult() {
+            const result = AppState.personalityTest.result;
+            const personality = PersonalityTypes[result];
+            
+            if (personality) {
+                DOM.personalityType.textContent = personality.type;
+                DOM.personalityType.className = `text-2xl md:text-3xl font-bold mb-2 ${personality.color}`;
+                DOM.personalityDescription.textContent = personality.description;
+                DOM.personalityDetail.textContent = personality.detail;
+                
+                // 隐藏测试问题，显示结果
+                document.querySelector('#test > .bg-gradient-to-br').classList.add('hidden');
+                DOM.testResult.classList.remove('hidden');
+                
+                // 滚动到结果部分
+                setTimeout(() => {
+                    DOM.testResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+
+        function retakeTest() {
+            // 重置测试状态
+            AppState.personalityTest.currentQuestion = 1;
+            AppState.personalityTest.answers = {};
+            AppState.personalityTest.result = null;
+            
+            // 显示测试问题，隐藏结果
+            document.querySelector('#test > .bg-gradient-to-br').classList.remove('hidden');
+            DOM.testResult.classList.add('hidden');
+            
+            // 更新显示
+            updatePersonalityTestQuestion();
+            updateProgressBar();
+            
+            saveStateToLocalStorage();
+        }
+
+        function updateProgressBar() {
+            const test = AppState.personalityTest;
+            const progress = (test.currentQuestion / test.totalQuestions) * 100;
+            
+            if (DOM.progressBar) {
+                DOM.progressBar.style.width = `${progress}%`;
+            }
+            
+            if (DOM.progressText) {
+                DOM.progressText.textContent = `${test.currentQuestion}/${test.totalQuestions}`;
+            }
+            
+            if (DOM.progressPercent) {
+                DOM.progressPercent.textContent = `${Math.round(progress)}%`;
+            }
+        }
+
+        // ==================== 反思广场功能 ====================
+        function updateReflectionPosts() {
+            if (!DOM.reflectionPostsContainer) return;
+            
+            const container = DOM.reflectionPostsContainer;
+            container.innerHTML = '';
+            
+            AppState.reflectionPosts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'bg-gray-50 rounded-xl p-4 md:p-5 hover:shadow-md transition-shadow';
+                postElement.innerHTML = `
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 ${post.avatarColor} rounded-full flex items-center justify-center">
+                            <span class="font-bold text-gray-700">${post.author.charAt(0)}</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">${post.author}</h4>
+                            <p class="text-xs text-gray-500">${post.time}</p>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-gray-800 mb-2">${post.title}</h3>
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">${post.content}</p>
+                    <div class="flex justify-between text-sm text-gray-500">
+                        <button class="flex items-center gap-1 hover:text-red-500 transition-colors" onclick="likeReflection(${post.id})">
+                            <iconify-icon icon="mdi:heart"></iconify-icon>
+                            <span>${post.likes}</span>
+                        </button>
+                        <button class="flex items-center gap-1 hover:text-blue-500 transition-colors" onclick="commentReflection(${post.id})">
+                            <iconify-icon icon="mdi:comment"></iconify-icon>
+                            <span>${post.comments}</span>
+                        </button>
+                        <button class="flex items-center gap-1 hover:text-green-500 transition-colors" onclick="shareReflection(${post.id})">
+                            <iconify-icon icon="mdi:share"></iconify-icon>
+                            <span>分享</span>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(postElement);
+            });
+        }
+
+        function updateReflectionRanking() {
+            if (!DOM.reflectionRanking) return;
+            
+            // 按点赞数排序
+            const sortedPosts = [...AppState.reflectionPosts].sort((a, b) => b.likes - a.likes);
+            
+            DOM.reflectionRanking.innerHTML = '';
+            
+            sortedPosts.slice(0, 5).forEach((post, index) => {
+                const rankItem = document.createElement('div');
+                rankItem.className = 'flex items-center gap-3 p-3 hover:bg-white/50 rounded-lg transition-colors';
+                rankItem.innerHTML = `
+                    <div class="w-8 h-8 rounded-full ${post.avatarColor} flex items-center justify-center">
+                        <span class="font-bold text-gray-700">${post.author.charAt(0)}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-medium text-gray-800 truncate">${post.title}</h4>
+                        <p class="text-xs text-gray-500">${post.author} · ${post.time}</p>
+                    </div>
+                    <div class="flex items-center gap-1 text-amber-600">
+                        <iconify-icon icon="mdi:star"></iconify-icon>
+                        <span class="font-medium">${post.likes}</span>
+                    </div>
+                `;
+                DOM.reflectionRanking.appendChild(rankItem);
+            });
+        }
+
+        function publishReflection() {
+            const title = prompt('请输入反思标题：');
+            if (!title) return;
+            
+            const content = prompt('请输入反思内容：');
+            if (!content) return;
+            
+            const newPost = {
+                id: Date.now(),
+                author: '匿名用户',
+                time: '刚刚',
+                title: title,
+                content: content,
+                likes: 0,
+                comments: 0,
+                avatarColor: 'bg-gray-100'
+            };
+            
+            AppState.reflectionPosts.unshift(newPost);
+            updateReflectionPosts();
+            updateReflectionRanking();
+            saveStateToLocalStorage();
+            
+            alert('反思已发布！');
+        }
+
+        // ==================== 互动函数 ====================
+        function likeReflection(postId) {
+            const post = AppState.reflectionPosts.find(p => p.id === postId);
+            if (post) {
+                post.likes++;
+                updateReflectionPosts();
+                updateReflectionRanking();
+                saveStateToLocalStorage();
+                
+                // 显示点赞动画效果
+                const button = event.target.closest('button');
+                if (button) {
+                    button.classList.add('text-red-500');
+                    setTimeout(() => {
+                        button.classList.remove('text-red-500');
+                    }, 1000);
+                }
+            }
+        }
+
+        function commentReflection(postId) {
+            const comment = prompt('请输入您的评论：');
+            if (comment) {
+                const post = AppState.reflectionPosts.find(p => p.id === postId);
+                if (post) {
+                    post.comments++;
+                    updateReflectionPosts();
+                    saveStateToLocalStorage();
+                    alert('评论已发布！');
+                }
+            }
+        }
+
+        function shareReflection(postId) {
+            const post = AppState.reflectionPosts.find(p => p.id === postId);
+            if (post) {
+                const shareText = `分享自《本真消费日记》反思广场：\n\n${post.title}\n\n${post.content}\n\n—— ${post.author}`;
+                if (navigator.share) {
+                    navigator.share({
+                        title: post.title,
+                        text: shareText,
+                        url: window.location.href
+                    });
+                } else {
+                    navigator.clipboard.writeText(shareText).then(() => {
+                        alert('反思内容已复制到剪贴板，可以分享给朋友了！');
+                    });
+                }
+            }
+        }
+
+        // ==================== 图表功能 ====================
+        function initCharts() {
+            if (typeof echarts === 'undefined') {
+                console.warn('ECharts未加载，图表初始化失败');
+                return;
+            }
+            
+            // 消费类型分布饼图
+            const chart1 = echarts.init(document.getElementById('chart1'));
+            const chart2 = echarts.init(document.getElementById('chart2'));
+            const chart3 = echarts.init(document.getElementById('chart3'));
+            
+            updateCharts(chart1, chart2, chart3);
+        }
+
+        function updateCharts(chart1, chart2, chart3) {
+            if (!chart1 || !chart2 || !chart3) {
+                chart1 = echarts.init(document.getElementById('chart1'));
+                chart2 = echarts.init(document.getElementById('chart2'));
+                chart3 = echarts.init(document.getElementById('chart3'));
+            }
+            
+            // 消费类型分布数据
+            const typeCounts = {};
+            AppState.consumptionRecords.forEach(record => {
+                typeCounts[record.type] = (typeCounts[record.type] || 0) + 1;
+            });
+            
+            const typeData = Object.keys(typeCounts).map(type => ({
+                name: type,
+                value: typeCounts[type]
+            }));
+            
+            // 饼图配置
+            const pieOption = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c}次 ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    right: 10,
+                    top: 'center',
+                    textStyle: {
+                        fontSize: 12
+                    }
+                },
+                series: [{
+                    name: '消费类型',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '16',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: typeData
+                }],
+                color: ['#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981']
+            };
+            
+            chart1.setOption(pieOption);
+            
+            // 月度消费趋势折线图
+            const lineOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: '第{name}次消费: ¥{c}'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: AppState.consumptionRecords.map((_, index) => `第${index + 1}次`),
+                    axisLabel: {
+                        fontSize: 11
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额(EC)',
+                    axisLabel: {
+                        formatter: '¥{value}'
+                    }
+                },
+                series: [{
+                    name: '消费金额',
+                    type: 'line',
+                    data: AppState.consumptionRecords.map(record => record.price),
+                    smooth: true,
+                    lineStyle: {
+                        width: 3
+                    },
+                    itemStyle: {
+                        color: '#3b82f6'
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(59, 130, 246, 0.5)' },
+                            { offset: 1, color: 'rgba(59, 130, 246, 0.1)' }
+                        ])
+                    }
+                }],
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '10%',
+                    containLabel: true
+                }
+            };
+            
+            chart2.setOption(lineOption);
+            
+            // 消费价值分析雷达图
+            const radarOption = {
+                tooltip: {
+                    trigger: 'item'
+                },
+                radar: {
+                    indicator: [
+                        { name: '实用价值', max: 10 },
+                        { name: '情感价值', max: 10 },
+                        { name: '欲望理性度', max: 100 },
+                        { name: '消费满意度', max: 10 }
+                    ],
+                    center: ['50%', '50%'],
+                    radius: '65%'
+                },
+                series: [{
+                    type: 'radar',
+                    data: [{
+                        value: [
+                            AppState.consumptionRecords.reduce((sum, r) => sum + r.practicalValue, 0) / AppState.consumptionRecords.length || 5,
+                            AppState.consumptionRecords.reduce((sum, r) => sum + r.emotionalValue, 0) / AppState.consumptionRecords.length || 5,
+                            AppState.consumptionRecords.reduce((sum, r) => sum + r.desireIndex, 0) / AppState.consumptionRecords.length || 50,
+                            AppState.consumptionRecords.reduce((sum, r) => sum + r.satisfaction, 0) / AppState.consumptionRecords.length || 5
+                        ],
+                        name: '消费价值分析',
+                        areaStyle: {
+                            color: 'rgba(244, 114, 182, 0.3)'
+                        },
+                        lineStyle: {
+                            color: '#f472b6',
+                            width: 2
+                        },
+                        itemStyle: {
+                            color: '#f472b6'
+                        }
+                    }]
+                }],
+                color: ['#f472b6']
+            };
+            
+            chart3.setOption(radarOption);
+            
+            // 更新分析报告文本
+            updateAnalysisText();
+            
+            // 响应式调整
+            window.addEventListener('resize', function() {
+                chart1.resize();
+                chart2.resize();
+                chart3.resize();
+            });
+        }
+
+        function updateAnalysisText() {
+            const riskText = document.getElementById('luxuryRiskText');
+            const patternText = document.getElementById('consumptionPatternText');
+            
+            if (AppState.consumptionRecords.length === 0) {
+                if (riskText) riskText.textContent = '暂无消费记录，无法进行分析。请先记录您的消费行为。';
+                if (patternText) patternText.textContent = '开始记录消费，发现您的消费模式。';
+                return;
+            }
+            
+            // 分析"精致穷"风险
+            const impulseCount = AppState.consumptionRecords.filter(r => r.type === '冲动消费').length;
+            const totalCount = AppState.consumptionRecords.length;
+            const impulseRatio = impulseCount / totalCount;
+            
+            let riskAssessment = '';
+            if (impulseRatio > 0.4) {
+                riskAssessment = '检测到较高比例的冲动消费，存在"精致穷"风险。建议加强对消费欲望的觉察和管控。';
+            } else if (impulseRatio > 0.2) {
+                riskAssessment = '存在一定的冲动消费倾向，需要关注消费动机的真实性。';
+            } else {
+                riskAssessment = '消费行为较为理性，尚未检测到明显的"精致穷"消费模式。您的消费以实用价值和情感价值的平衡为主。';
+            }
+            
+            if (riskText) riskText.textContent = riskAssessment;
+            
+            // 分析消费模式
+            const typeStats = {};
+            AppState.consumptionRecords.forEach(r => {
+                typeStats[r.type] = (typeStats[r.type] || 0) + 1;
+            });
+            
+            // 找出主要的消费类型
+            let mainType = '';
+            let maxCount = 0;
+            for (const type in typeStats) {
+                if (typeStats[type] > maxCount) {
+                    maxCount = typeStats[type];
+                    mainType = type;
+                }
+            }
+            
+            let patternInsight = '';
+            switch (mainType) {
+                case '文化体验':
+                    patternInsight = '您倾向于在文化体验上花费较多，这体现了对精神生活的重视。建议保持对情绪驱动消费的觉察，确保每次文化消费都带来真正的成长。';
+                    break;
+                case '自我投资':
+                    patternInsight = '您的消费以自我投资为主，这表明您重视长期成长。请继续这种有价值的消费模式，同时注意平衡即时享受与长期收益。';
+                    break;
+                case '必需品':
+                    patternInsight = '您的消费主要集中在必需品上，体现了务实的生活态度。建议适当关注生活品质的提升，在合理范围内满足情感需求。';
+                    break;
+                case '社交需求':
+                    patternInsight = '社交消费占比较大，这表明您重视人际关系。建议关注消费的实用价值，建立更可持续的社交方式。';
+                    break;
+                default:
+                    patternInsight = '您的消费模式较为多样化，体现了全面的生活关注。建议继续记录和反思，优化消费结构。';
+            }
+            
+            if (patternText) patternText.textContent = patternInsight;
+        }
+
+        // ==================== 设置示例数据 ====================
+        function setupExampleData() {
+            // 添加一些示例消费记录
+            AppState.consumptionRecords = [
+                {
+                    id: 1,
+                    itemName: '哲学书籍',
+                    price: 89,
+                    type: '文化体验',
+                    motivation: '想要深入理解存在主义哲学',
+                    desireIndex: 75,
+                    timestamp: '2025-01-15T10:30:00Z',
+                    emotion: '满意愉悦',
+                    reflection: '阅读这本书让我对生活有了新的思考，非常值得的投资',
+                    practicalValue: 8,
+                    emotionalValue: 9,
+                    satisfaction: 8.5
+                },
+                {
+                    id: 2,
+                    itemName: '有机咖啡豆',
+                    price: 128,
+                    type: '必需品',
+                    motivation: '每天都需要咖啡来开始工作',
+                    desireIndex: 65,
+                    timestamp: '2025-01-20T14:45:00Z',
+                    emotion: '平静无感',
+                    reflection: '质量不错，但可能不需要这么贵的品牌',
+                    practicalValue: 7,
+                    emotionalValue: 6,
+                    satisfaction: 6.5
+                },
+                {
+                    id: 3,
+                    itemName: '线上课程',
+                    price: 299,
+                    type: '自我投资',
+                    motivation: '提升技能，为职业发展做准备',
+                    desireIndex: 80,
+                    timestamp: '2025-01-25T09:15:00Z',
+                    emotion: '满意愉悦',
+                    reflection: '学到了很多实用的知识，对未来很有帮助',
+                    practicalValue: 9,
+                    emotionalValue: 8,
+                    satisfaction: 8.5
+            }
+            ];
+            
+            // 初始化钱包显示
+            updateWalletDisplay();
+            
+            // 更新反射帖子和排行榜
+            updateReflectionPosts();
+            updateReflectionRanking();
+            
+            // 保存到本地存储
+            saveStateToLocalStorage();
+            
+            console.log('示例数据已设置');
+        }
+    </script>
+</body>
+</html>
